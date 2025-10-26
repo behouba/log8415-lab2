@@ -12,7 +12,3 @@ data/datasets/
 data/chunks/
 data/mapper_outputs/
 data/reducer_outputs/
-data/soc-LiveJournal1Adj.txt
-
-# Plot outputs
-*.png

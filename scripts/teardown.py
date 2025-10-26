@@ -1,7 +1,4 @@
 #!/usr/bin/env python3
-"""
-Teardown all Lab 2 EC2 instances
-"""
 import os, sys
 import boto3
 

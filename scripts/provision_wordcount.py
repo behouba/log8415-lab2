@@ -1,7 +1,4 @@
 #!/usr/bin/env python3
-"""
-Provision a single T2.large instance for WordCount benchmarking
-"""
 import json, os, sys
 import boto3
 
@@ -84,6 +81,3 @@ with open("artifacts/wordcount_instance.json", "w") as f:
     json.dump(output_data, f, indent=2)
 
 print("\n✅ Wrote instance details to artifacts/wordcount_instance.json")
-print("\nNext steps:")
-print("  1. Wait ~30 seconds for SSH to become available")
-print("  2. Run: python scripts/setup_hadoop_spark.py")

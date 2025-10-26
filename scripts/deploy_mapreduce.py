@@ -1,7 +1,4 @@
 #!/usr/bin/env python3
-"""
-Deploy mapper and reducer scripts to EC2 instances
-"""
 import json, os, sys, subprocess, time
 
 KEY_PATH = os.getenv("AWS_KEY_PATH")
@@ -24,7 +21,6 @@ SSH_BASE = [
 ]
 
 def ssh(host, cmd):
-    """Execute command on remote host"""
     remote = f"bash -lc '{cmd}'"
     result = subprocess.run(
         SSH_BASE + ["-i", KEY_PATH, f"{SSH_USER}@{host}", remote],
@@ -33,7 +29,6 @@ def ssh(host, cmd):
     return result
 
 def scp_upload(host, local_path, remote_path):
-    """Upload file to remote host"""
     result = subprocess.run(
         ["scp", "-o", "StrictHostKeyChecking=no", "-i", KEY_PATH,
          local_path, f"{SSH_USER}@{host}:{remote_path}"],
@@ -42,7 +37,6 @@ def scp_upload(host, local_path, remote_path):
     return result
 
 def wait_for_ssh(host):
-    """Wait for SSH to become available"""
     print(f"  Waiting for SSH on {host}...")
     for i in range(30):
         try:
@@ -59,10 +53,7 @@ def wait_for_ssh(host):
     return False
 
 def setup_instance(host, role):
-    """Install Python and create working directory"""
     print(f"\n  Setting up {host} ({role})...")
-
-    # Install Python 3
     print(f"  Installing Python 3...")
     result = ssh(host, "sudo apt-get update -y && sudo apt-get install -y python3")
     if result.returncode != 0:
@@ -70,7 +61,6 @@ def setup_instance(host, role):
         print(result.stdout)
         return False
 
-    # Create working directory
     ssh(host, "mkdir -p ~/mapreduce ~/data")
 
     print(f"  ✅ {host} setup complete")
@@ -118,7 +108,4 @@ for reducer in instances["reducers"]:
     ssh(host, "chmod +x ~/mapreduce/reducer.py")
 
 print("\n✅ Deployment complete!")
-print(f"\nDeployed to:")
-print(f"  - {len(instances['mappers'])} mapper instance(s)")
-print(f"  - {len(instances['reducers'])} reducer instance(s)")
-print("\nNext step: python scripts/run_friend_recommendation.py")
+print(f"Deployed to {len(instances['mappers'])} mappers, {len(instances['reducers'])} reducers")

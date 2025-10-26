@@ -1,7 +1,4 @@
 #!/usr/bin/env python3
-"""
-Install and configure Hadoop and Spark on the WordCount instance
-"""
 import json, os, sys, subprocess, time
 
 KEY_PATH = os.getenv("AWS_KEY_PATH")
@@ -25,7 +22,6 @@ SSH_BASE = [
 ]
 
 def ssh(cmd, show_output=True):
-    """Execute command on remote host"""
     remote = f"bash -lc '{cmd}'"
     result = subprocess.run(
         SSH_BASE + ["-i", KEY_PATH, f"{SSH_USER}@{HOST}", remote],
@@ -218,6 +214,5 @@ ssh("source ~/.bashrc && ~/hadoop/bin/hdfs dfs -mkdir -p /input")
 ssh("source ~/.bashrc && ~/hadoop/bin/hdfs dfs -mkdir -p /output")
 
 print("\n✅ Hadoop and Spark installation complete!")
-print("\nHadoop Web UI: http://{}:9870".format(HOST))
-print("YARN Web UI:   http://{}:8088".format(HOST))
-print("\nNext step: python scripts/run_wordcount_benchmarks.py")
+print("Hadoop NameNode: http://{}:9870".format(HOST))
+print("YARN:            http://{}:8088".format(HOST))

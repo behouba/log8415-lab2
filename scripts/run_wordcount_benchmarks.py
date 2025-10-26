@@ -1,7 +1,4 @@
 #!/usr/bin/env python3
-"""
-Run WordCount benchmarks on all datasets using Hadoop, Spark, and Linux
-"""
 import json, os, sys, subprocess, time
 import urllib.request
 import shutil
@@ -48,7 +45,6 @@ def ssh(cmd):
     return result
 
 def scp_upload(local_path, remote_path):
-    """Upload file to remote host"""
     result = subprocess.run(
         ["scp", "-o", "StrictHostKeyChecking=no", "-i", KEY_PATH,
          local_path, f"{SSH_USER}@{HOST}:{remote_path}"],
@@ -145,14 +141,12 @@ for dataset_name, _ in dataset_files:
 
             status = "✓" if success else "✗"
             print(f"  {status} Time: {elapsed_time:.2f}s\n")
-
-            # Clean up output directories between runs
             if method_name == "hadoop":
                 ssh(f"source ~/.bashrc && ~/hadoop/bin/hdfs dfs -rm -r -f /output/hadoop_{dataset_name} || true")
             elif method_name == "spark":
                 ssh(f"rm -rf /tmp/spark_output_{dataset_name} || true")
 
-# Step 5: Save results
+# Save results
 print("\n=== Saving Results ===")
 output_file = "artifacts/benchmark_results.json"
 with open(output_file, "w") as f:
@@ -160,20 +154,13 @@ with open(output_file, "w") as f:
 
 print(f"✅ Results saved to {output_file}")
 
-# Step 6: Print summary
 print("\n=== Summary ===")
 successful_runs = sum(1 for r in results if r["success"])
 print(f"Total runs: {len(results)}")
 print(f"Successful: {successful_runs}")
 print(f"Failed: {len(results) - successful_runs}")
-
-# Average times per method
 for method_name, _ in methods:
     method_results = [r for r in results if r["method"] == method_name and r["success"]]
     if method_results:
         avg_time = sum(r["execution_time_seconds"] for r in method_results) / len(method_results)
-        print(f"\n{method_name.upper()}:")
-        print(f"  Average time: {avg_time:.2f}s")
-        print(f"  Successful runs: {len(method_results)}")
-
-print("\nNext step: python plots/generate_plots.py")
+        print(f"\n{method_name.upper()}: {avg_time:.2f}s avg ({len(method_results)} runs)")

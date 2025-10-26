@@ -1,9 +1,4 @@
 #!/usr/bin/env python3
-"""
-Provision EC2 instances for distributed MapReduce
-- N mapper instances (t2.micro)
-- M reducer instances (t2.micro)
-"""
 import json, os, sys, itertools
 import boto3
 
@@ -13,9 +8,8 @@ SG_ID    = os.getenv("AWS_INSTANCE_SG_ID")
 AMI_ID   = os.getenv("AWS_AMI_ID", "")
 SUBNETS  = os.getenv("AWS_SUBNET_IDS", "").split(",") if os.getenv("AWS_SUBNET_IDS") else []
 
-# Configuration
-NUM_MAPPERS = 3   # Number of mapper instances
-NUM_REDUCERS = 2  # Number of reducer instances
+NUM_MAPPERS = 3
+NUM_REDUCERS = 2
 
 if not (KEY_NAME and SG_ID and SUBNETS):
     sys.exit("Missing one of: AWS_KEY_NAME, AWS_INSTANCE_SG_ID, AWS_SUBNET_IDS")
@@ -36,7 +30,6 @@ if not AMI_ID:
     print(f"Using Ubuntu 22.04 AMI: {AMI_ID}")
 
 def create_instances(instance_type, count, role_tag):
-    """Create multiple instances with a specific role"""
     subnet_cycle = itertools.cycle(SUBNETS)
     instances = []
 
@@ -122,10 +115,4 @@ with open("artifacts/mapreduce_instances.json", "w") as f:
     json.dump(output_data, f, indent=2)
 
 print("\n✅ Wrote instance details to artifacts/mapreduce_instances.json")
-print(f"\nSummary:")
-print(f"  Mappers:  {len(mapper_instances)}")
-print(f"  Reducers: {len(reducer_instances)}")
-print(f"  Total:    {len(all_instances)}")
-print("\nNext steps:")
-print("  1. Wait ~30 seconds for SSH to become available")
-print("  2. Run: python scripts/deploy_mapreduce.py")
+print(f"Mappers: {len(mapper_instances)}, Reducers: {len(reducer_instances)}")

@@ -62,11 +62,18 @@ ssh("java -version")
 
 print("\n=== Step 4: Download and install Hadoop 3.3.6 ===")
 ssh("""
+set -e
 cd ~
-wget -q https://dlcdn.apache.org/hadoop/common/hadoop-3.3.6/hadoop-3.3.6.tar.gz
-tar -xzf hadoop-3.3.6.tar.gz
+HADOOP_TGZ=hadoop-3.3.6.tar.gz
+HADOOP_URL_PRIMARY=https://dlcdn.apache.org/hadoop/common/hadoop-3.3.6/hadoop-3.3.6.tar.gz
+HADOOP_URL_FALLBACK=https://archive.apache.org/dist/hadoop/common/hadoop-3.3.6/hadoop-3.3.6.tar.gz
+if ! curl -fL -o "$HADOOP_TGZ" "$HADOOP_URL_PRIMARY"; then
+  curl -fL -o "$HADOOP_TGZ" "$HADOOP_URL_FALLBACK"
+fi
+tar -xzf "$HADOOP_TGZ"
+rm -rf hadoop
 mv hadoop-3.3.6 hadoop
-rm hadoop-3.3.6.tar.gz
+rm "$HADOOP_TGZ"
 """)
 
 print("\n=== Step 5: Configure Hadoop environment ===")
@@ -175,27 +182,53 @@ mkdir -p ~/hadoop/data/namenode
 mkdir -p ~/hadoop/data/datanode
 """)
 
-print("\n=== Step 12: Format HDFS ===")
-ssh("source ~/.bashrc && ~/hadoop/bin/hdfs namenode -format -force")
+JAVA_HOME = "/usr/lib/jvm/java-11-openjdk-amd64"
+env_prefix = f"JAVA_HOME={JAVA_HOME} "
 
-print("\n=== Step 13: Start Hadoop services ===")
-ssh("source ~/.bashrc && ~/hadoop/sbin/start-dfs.sh")
-ssh("source ~/.bashrc && ~/hadoop/sbin/start-yarn.sh")
-
-print("\n=== Step 14: Verify Hadoop is running ===")
-time.sleep(5)
-ssh("source ~/.bashrc && ~/hadoop/bin/hdfs dfsadmin -report")
-
-print("\n=== Step 15: Download and install Spark 3.5.0 ===")
+print("\n=== Step 12: Configure passwordless SSH for Hadoop scripts ===")
 ssh("""
-cd ~
-wget -q https://dlcdn.apache.org/spark/spark-3.5.0/spark-3.5.0-bin-hadoop3.tgz
-tar -xzf spark-3.5.0-bin-hadoop3.tgz
-mv spark-3.5.0-bin-hadoop3 spark
-rm spark-3.5.0-bin-hadoop3.tgz
+mkdir -p ~/.ssh
+chmod 700 ~/.ssh
+if [ ! -f ~/.ssh/id_rsa ]; then
+  ssh-keygen -t rsa -q -N "" -f ~/.ssh/id_rsa
+fi
+touch ~/.ssh/authorized_keys
+if ! grep -qxF "$(cat ~/.ssh/id_rsa.pub)" ~/.ssh/authorized_keys; then
+  cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+fi
+chmod 600 ~/.ssh/authorized_keys
 """)
 
-print("\n=== Step 16: Configure Spark environment ===")
+print("\n=== Step 13: Format HDFS ===")
+ssh(f"{env_prefix}~/hadoop/bin/hdfs namenode -format -force")
+
+print("\n=== Step 14: Start Hadoop services ===")
+ssh(f"{env_prefix}~/hadoop/sbin/hadoop-daemon.sh start namenode")
+ssh(f"{env_prefix}~/hadoop/sbin/hadoop-daemon.sh start datanode")
+ssh(f"{env_prefix}~/hadoop/sbin/yarn-daemon.sh start resourcemanager")
+ssh(f"{env_prefix}~/hadoop/sbin/yarn-daemon.sh start nodemanager")
+
+print("\n=== Step 15: Verify Hadoop is running ===")
+time.sleep(5)
+ssh(f"{env_prefix}~/hadoop/bin/hdfs dfsadmin -report")
+
+print("\n=== Step 16: Download and install Spark 3.5.0 ===")
+ssh("""
+set -e
+cd ~
+SPARK_TGZ=spark-3.5.0-bin-hadoop3.tgz
+SPARK_URL_PRIMARY=https://dlcdn.apache.org/spark/spark-3.5.0/spark-3.5.0-bin-hadoop3.tgz
+SPARK_URL_FALLBACK=https://archive.apache.org/dist/spark/spark-3.5.0/spark-3.5.0-bin-hadoop3.tgz
+if ! curl -fL -o "$SPARK_TGZ" "$SPARK_URL_PRIMARY"; then
+  curl -fL -o "$SPARK_TGZ" "$SPARK_URL_FALLBACK"
+fi
+tar -xzf "$SPARK_TGZ"
+rm -rf spark
+mv spark-3.5.0-bin-hadoop3 spark
+rm "$SPARK_TGZ"
+""")
+
+print("\n=== Step 17: Configure Spark environment ===")
 ssh("""
 cat >> ~/.bashrc << 'BASHRC_EOF'
 
@@ -206,12 +239,12 @@ export PYSPARK_PYTHON=/usr/bin/python3
 BASHRC_EOF
 """)
 
-print("\n=== Step 17: Verify Spark installation ===")
-ssh("source ~/.bashrc && ~/spark/bin/spark-submit --version")
+print("\n=== Step 18: Verify Spark installation ===")
+ssh(f"{env_prefix}~/spark/bin/spark-submit --version")
 
-print("\n=== Step 18: Create HDFS input directory ===")
-ssh("source ~/.bashrc && ~/hadoop/bin/hdfs dfs -mkdir -p /input")
-ssh("source ~/.bashrc && ~/hadoop/bin/hdfs dfs -mkdir -p /output")
+print("\n=== Step 19: Create HDFS input directory ===")
+ssh(f"{env_prefix}~/hadoop/bin/hdfs dfs -mkdir -p /input")
+ssh(f"{env_prefix}~/hadoop/bin/hdfs dfs -mkdir -p /output")
 
 print("\n✅ Hadoop and Spark installation complete!")
 print("Hadoop NameNode: http://{}:9870".format(HOST))

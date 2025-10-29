@@ -68,25 +68,31 @@ HADOOP_TGZ=hadoop-3.3.6.tar.gz
 HADOOP_URL=https://archive.apache.org/dist/hadoop/common/hadoop-3.3.6/hadoop-3.3.6.tar.gz
 DL_OPTS="--fail --location --retry 5 --retry-all-errors --retry-delay 5 --connect-timeout 20 --max-time 600 --speed-limit 10240 --speed-time 30 --continue-at -"
 if [ -d ~/hadoop ]; then
-  echo "Hadoop already installed at ~/hadoop. Skipping download."
+  echo "[HADOOP] Existing ~/hadoop directory detected; skipping download."
+  du -sh ~/hadoop || true
 else
   if [ -f "$HADOOP_TGZ" ]; then
-    echo "Reusing existing $HADOOP_TGZ"
+    echo "[HADOOP] Reusing existing $HADOOP_TGZ"
+    ls -lh "$HADOOP_TGZ"
   else
-    echo "Downloading Hadoop from $HADOOP_URL"
+    echo "[HADOOP] Downloading from $HADOOP_URL with curl"
     if ! timeout 420 curl $DL_OPTS -o "$HADOOP_TGZ" "$HADOOP_URL"; then
-      echo "curl download failed; retrying with wget..."
+      echo "[HADOOP] curl download failed; retrying with wget..."
       rm -f "$HADOOP_TGZ"
       if ! timeout 420 wget -O "$HADOOP_TGZ" --tries=3 --timeout=60 --continue --progress=dot:giga "$HADOOP_URL"; then
-        echo "Failed to download Hadoop tarball" >&2
+        echo "[HADOOP] Failed to download tarball via wget" >&2
         exit 1
       fi
     fi
+    echo "[HADOOP] Download completed"
+    ls -lh "$HADOOP_TGZ"
   fi
+  echo "[HADOOP] Verifying tarball..."
   if ! tar -tzf "$HADOOP_TGZ" >/dev/null 2>&1; then
-    echo "Hadoop tarball appears corrupt. Delete $HADOOP_TGZ and rerun." >&2
+    echo "[HADOOP] Tarball appears corrupt. Delete $HADOOP_TGZ and rerun." >&2
     exit 1
   fi
+  echo "[HADOOP] Extracting..."
   rm -rf hadoop-3.3.6
   tar -xzf "$HADOOP_TGZ"
   rm -rf hadoop
@@ -239,25 +245,31 @@ SPARK_TGZ=spark-3.5.0-bin-hadoop3.tgz
 SPARK_URL=https://archive.apache.org/dist/spark/spark-3.5.0/spark-3.5.0-bin-hadoop3.tgz
 DL_OPTS="--fail --location --retry 5 --retry-all-errors --retry-delay 5 --connect-timeout 20 --max-time 600 --speed-limit 10240 --speed-time 30 --continue-at -"
 if [ -d ~/spark ]; then
-  echo "Spark already installed at ~/spark. Skipping download."
+  echo "[SPARK] Existing ~/spark directory detected; skipping download."
+  du -sh ~/spark || true
 else
   if [ -f "$SPARK_TGZ" ]; then
-    echo "Reusing existing $SPARK_TGZ"
+    echo "[SPARK] Reusing existing $SPARK_TGZ"
+    ls -lh "$SPARK_TGZ"
   else
-    echo "Downloading Spark from $SPARK_URL"
+    echo "[SPARK] Downloading from $SPARK_URL with curl"
     if ! timeout 420 curl $DL_OPTS -o "$SPARK_TGZ" "$SPARK_URL"; then
-      echo "curl download failed; retrying with wget..."
+      echo "[SPARK] curl download failed; retrying with wget..."
       rm -f "$SPARK_TGZ"
       if ! timeout 420 wget -O "$SPARK_TGZ" --tries=3 --timeout=60 --continue --progress=dot:giga "$SPARK_URL"; then
-        echo "Failed to download Spark tarball" >&2
+        echo "[SPARK] Failed to download tarball via wget" >&2
         exit 1
       fi
     fi
+    echo "[SPARK] Download completed"
+    ls -lh "$SPARK_TGZ"
   fi
+  echo "[SPARK] Verifying tarball..."
   if ! tar -tzf "$SPARK_TGZ" >/dev/null 2>&1; then
-    echo "Spark tarball appears corrupt. Delete $SPARK_TGZ and rerun." >&2
+    echo "[SPARK] Tarball appears corrupt. Delete $SPARK_TGZ and rerun." >&2
     exit 1
   fi
+  echo "[SPARK] Extracting..."
   rm -rf spark-3.5.0-bin-hadoop3
   tar -xzf "$SPARK_TGZ"
   rm -rf spark

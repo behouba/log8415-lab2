@@ -122,7 +122,7 @@ set -e
 cd ~
 HADOOP_TGZ=hadoop-3.3.6.tar.gz
 HADOOP_URL=https://archive.apache.org/dist/hadoop/common/hadoop-3.3.6/hadoop-3.3.6.tar.gz
-DL_OPTS="--fail --location --retry 5 --retry-all-errors --retry-delay 5 --connect-timeout 20 --max-time 600 --speed-limit 10240 --speed-time 30 --continue-at -"
+DL_OPTS="--fail --location --retry 5 --retry-all-errors --retry-delay 5 --connect-timeout 20 --speed-limit 10240 --speed-time 30 --continue-at -"
 if [ -d ~/hadoop ]; then
   echo "[HADOOP] Existing ~/hadoop directory detected; skipping download."
   du -sh ~/hadoop || true
@@ -132,11 +132,13 @@ else
     ls -lh "$HADOOP_TGZ"
   else
     echo "[HADOOP] Downloading from $HADOOP_URL with curl"
-    if ! timeout 420 curl $DL_OPTS -o "$HADOOP_TGZ" "$HADOOP_URL"; then
-      echo "[HADOOP] curl download failed; retrying with wget..."
+    if ! curl $DL_OPTS -o "$HADOOP_TGZ" "$HADOOP_URL"; then
+      status=$?
+      echo "[HADOOP] curl download failed (exit $status); retrying with wget..."
       rm -f "$HADOOP_TGZ"
-      if ! timeout 420 wget -O "$HADOOP_TGZ" --tries=3 --timeout=60 --continue --progress=dot:giga "$HADOOP_URL"; then
-        echo "[HADOOP] Failed to download tarball via wget" >&2
+      if ! wget -O "$HADOOP_TGZ" --tries=5 --timeout=60 --waitretry=5 --continue --progress=dot:giga "$HADOOP_URL"; then
+        status=$?
+        echo "[HADOOP] Failed to download tarball via wget (exit $status)" >&2
         exit 1
       fi
     fi
@@ -299,7 +301,7 @@ set -e
 cd ~
 SPARK_TGZ=spark-3.5.0-bin-hadoop3.tgz
 SPARK_URL=https://archive.apache.org/dist/spark/spark-3.5.0/spark-3.5.0-bin-hadoop3.tgz
-DL_OPTS="--fail --location --retry 5 --retry-all-errors --retry-delay 5 --connect-timeout 20 --max-time 600 --speed-limit 10240 --speed-time 30 --continue-at -"
+DL_OPTS="--fail --location --retry 5 --retry-all-errors --retry-delay 5 --connect-timeout 20 --speed-limit 10240 --speed-time 30 --continue-at -"
 if [ -d ~/spark ]; then
   echo "[SPARK] Existing ~/spark directory detected; skipping download."
   du -sh ~/spark || true
@@ -309,11 +311,13 @@ else
     ls -lh "$SPARK_TGZ"
   else
     echo "[SPARK] Downloading from $SPARK_URL with curl"
-    if ! timeout 420 curl $DL_OPTS -o "$SPARK_TGZ" "$SPARK_URL"; then
-      echo "[SPARK] curl download failed; retrying with wget..."
+    if ! curl $DL_OPTS -o "$SPARK_TGZ" "$SPARK_URL"; then
+      status=$?
+      echo "[SPARK] curl download failed (exit $status); retrying with wget..."
       rm -f "$SPARK_TGZ"
-      if ! timeout 420 wget -O "$SPARK_TGZ" --tries=3 --timeout=60 --continue --progress=dot:giga "$SPARK_URL"; then
-        echo "[SPARK] Failed to download tarball via wget" >&2
+      if ! wget -O "$SPARK_TGZ" --tries=5 --timeout=60 --waitretry=5 --continue --progress=dot:giga "$SPARK_URL"; then
+        status=$?
+        echo "[SPARK] Failed to download tarball via wget (exit $status)" >&2
         exit 1
       fi
     fi

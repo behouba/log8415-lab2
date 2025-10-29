@@ -120,8 +120,8 @@ print("\n=== Step 4: Download and install Hadoop 3.3.6 ===")
 ssh("""
 set -e
 cd ~
-HADOOP_TGZ=hadoop-3.3.6.tar.gz
-HADOOP_URL=https://archive.apache.org/dist/hadoop/common/hadoop-3.3.6/hadoop-3.3.6.tar.gz
+HADOOP_TGZ=hadoop-3.4.2.tar.gz
+HADOOP_URL=https://dlcdn.apache.org/hadoop/common/hadoop-3.4.2/hadoop-3.4.2.tar.gz
 DL_OPTS="--fail --location --retry 5 --retry-all-errors --retry-delay 5 --connect-timeout 20 --speed-limit 10240 --speed-time 30 --continue-at -"
 if [ -d ~/hadoop ]; then
   echo "[HADOOP] Existing ~/hadoop directory detected; skipping download."
@@ -151,10 +151,10 @@ else
     exit 1
   fi
   echo "[HADOOP] Extracting..."
-  rm -rf hadoop-3.3.6
+  rm -rf hadoop-3.4.2
   tar -xzf "$HADOOP_TGZ"
   rm -rf hadoop
-  mv hadoop-3.3.6 hadoop
+  mv hadoop-3.4.2 hadoop
   rm "$HADOOP_TGZ"
 fi
 """)
@@ -299,8 +299,8 @@ print("\n=== Step 16: Download and install Spark 3.5.0 ===")
 ssh("""
 set -e
 cd ~
-SPARK_TGZ=spark-3.5.0-bin-hadoop3.tgz
-SPARK_URL=https://archive.apache.org/dist/spark/spark-3.5.0/spark-3.5.0-bin-hadoop3.tgz
+SPARK_TGZ=spark-3.5.7-bin-hadoop3.tgz
+SPARK_URL=https://dlcdn.apache.org/spark/spark-3.5.7/spark-3.5.7-bin-hadoop3.tgz
 DL_OPTS="--fail --location --retry 5 --retry-all-errors --retry-delay 5 --connect-timeout 20 --speed-limit 10240 --speed-time 30 --continue-at -"
 if [ -d ~/spark ]; then
   echo "[SPARK] Existing ~/spark directory detected; skipping download."
@@ -330,10 +330,10 @@ else
     exit 1
   fi
   echo "[SPARK] Extracting..."
-  rm -rf spark-3.5.0-bin-hadoop3
+  rm -rf spark-3.5.7-bin-hadoop3
   tar -xzf "$SPARK_TGZ"
   rm -rf spark
-  mv spark-3.5.0-bin-hadoop3 spark
+  mv spark-3.5.7-bin-hadoop3 spark
   rm "$SPARK_TGZ"
 fi
 """)

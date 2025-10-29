@@ -66,7 +66,7 @@ set -e
 cd ~
 HADOOP_TGZ=hadoop-3.3.6.tar.gz
 HADOOP_URL=https://archive.apache.org/dist/hadoop/common/hadoop-3.3.6/hadoop-3.3.6.tar.gz
-DL_OPTS="--fail --location --retry 5 --retry-all-errors --retry-delay 5 --connect-timeout 20 --max-time 600 --continue-at -"
+DL_OPTS="--fail --location --retry 5 --retry-all-errors --retry-delay 5 --connect-timeout 20 --max-time 600 --speed-limit 10240 --speed-time 30 --continue-at -"
 echo "Downloading Hadoop from $HADOOP_URL"
 curl $DL_OPTS -o "$HADOOP_TGZ" "$HADOOP_URL"
 tar -xzf "$HADOOP_TGZ"
@@ -217,7 +217,7 @@ set -e
 cd ~
 SPARK_TGZ=spark-3.5.0-bin-hadoop3.tgz
 SPARK_URL=https://archive.apache.org/dist/spark/spark-3.5.0/spark-3.5.0-bin-hadoop3.tgz
-DL_OPTS="--fail --location --retry 5 --retry-all-errors --retry-delay 5 --connect-timeout 20 --max-time 600 --continue-at -"
+DL_OPTS="--fail --location --retry 5 --retry-all-errors --retry-delay 5 --connect-timeout 20 --max-time 600 --speed-limit 10240 --speed-time 30 --continue-at -"
 echo "Downloading Spark from $SPARK_URL"
 curl $DL_OPTS -o "$SPARK_TGZ" "$SPARK_URL"
 tar -xzf "$SPARK_TGZ"

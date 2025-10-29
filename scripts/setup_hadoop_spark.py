@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-import json, os, sys, subprocess, time
+import json, os, sys, subprocess, time, urllib.request
+
+import boto3
+from botocore.exceptions import ClientError
 
 KEY_PATH = os.getenv("AWS_KEY_PATH")
 if not KEY_PATH:
@@ -10,6 +13,8 @@ with open("artifacts/wordcount_instance.json") as f:
 
 HOST = instance["public_ip"]
 SSH_USER = "ubuntu"
+AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
+SG_ID = os.getenv("AWS_INSTANCE_SG_ID")
 
 SSH_BASE = [
     "ssh",
@@ -20,6 +25,38 @@ SSH_BASE = [
     "-o", "ConnectTimeout=20",
     "-o", "ConnectionAttempts=10",
 ]
+
+def ensure_ssh_access():
+    if not SG_ID:
+        print("WARN: AWS_INSTANCE_SG_ID not set; skipping security group authorization.")
+        return
+    try:
+        myip = urllib.request.urlopen("https://checkip.amazonaws.com", timeout=10).read().decode().strip()
+    except Exception as exc:
+        print(f"WARN: Unable to determine public IP for SSH authorization: {exc}")
+        return
+    cidr = f"{myip}/32"
+    print(f"Ensuring SSH access for {cidr} on security group {SG_ID}...")
+    ec2 = boto3.client("ec2", region_name=AWS_REGION)
+    try:
+        ec2.authorize_security_group_ingress(
+            GroupId=SG_ID,
+            IpPermissions=[{
+                "IpProtocol": "tcp",
+                "FromPort": 22,
+                "ToPort": 22,
+                "IpRanges": [{
+                    "CidrIp": cidr,
+                    "Description": "Lab2 automation SSH access"
+                }]
+            }]
+        )
+        print(f"Authorized SSH from {cidr}.")
+    except ClientError as err:
+        if "InvalidPermission.Duplicate" in str(err):
+            print(f"SSH rule for {cidr} already exists.")
+        else:
+            print(f"WARN: Failed to authorize SSH {cidr}: {err}")
 
 def ssh(cmd, show_output=True):
     remote = f"bash -lc '{cmd}'"
@@ -35,6 +72,8 @@ def ssh(cmd, show_output=True):
         sys.exit(1)
     return result
 
+ensure_ssh_access()
+
 print(f"Setting up Hadoop and Spark on {HOST}...")
 print("\n=== Step 1: Wait for SSH to be ready ===")
 for i in range(30):
@@ -46,8 +85,12 @@ for i in range(30):
         if result.returncode == 0:
             print("SSH is ready!")
             break
-    except:
-        pass
+        else:
+            msg = result.stderr.strip() if result.stderr else result.stdout.strip()
+            if msg:
+                print(f"SSH attempt {i+1} failed: {msg}")
+    except Exception as exc:
+        print(f"SSH attempt {i+1} exception: {exc}")
     print(f"Waiting for SSH... ({i+1}/30)")
     time.sleep(10)
 else:

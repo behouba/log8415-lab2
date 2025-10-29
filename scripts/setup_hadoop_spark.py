@@ -68,7 +68,14 @@ HADOOP_TGZ=hadoop-3.3.6.tar.gz
 HADOOP_URL=https://archive.apache.org/dist/hadoop/common/hadoop-3.3.6/hadoop-3.3.6.tar.gz
 DL_OPTS="--fail --location --retry 5 --retry-all-errors --retry-delay 5 --connect-timeout 20 --max-time 600 --speed-limit 10240 --speed-time 30 --continue-at -"
 echo "Downloading Hadoop from $HADOOP_URL"
-curl $DL_OPTS -o "$HADOOP_TGZ" "$HADOOP_URL"
+if ! timeout 420 curl $DL_OPTS -o "$HADOOP_TGZ" "$HADOOP_URL"; then
+  echo "curl download failed; retrying with wget..."
+  rm -f "$HADOOP_TGZ"
+  if ! timeout 420 wget -O "$HADOOP_TGZ" --tries=3 --timeout=60 --continue --progress=dot:giga "$HADOOP_URL"; then
+    echo "Failed to download Hadoop tarball" >&2
+    exit 1
+  fi
+fi
 tar -xzf "$HADOOP_TGZ"
 rm -rf hadoop
 mv hadoop-3.3.6 hadoop
@@ -219,7 +226,14 @@ SPARK_TGZ=spark-3.5.0-bin-hadoop3.tgz
 SPARK_URL=https://archive.apache.org/dist/spark/spark-3.5.0/spark-3.5.0-bin-hadoop3.tgz
 DL_OPTS="--fail --location --retry 5 --retry-all-errors --retry-delay 5 --connect-timeout 20 --max-time 600 --speed-limit 10240 --speed-time 30 --continue-at -"
 echo "Downloading Spark from $SPARK_URL"
-curl $DL_OPTS -o "$SPARK_TGZ" "$SPARK_URL"
+if ! timeout 420 curl $DL_OPTS -o "$SPARK_TGZ" "$SPARK_URL"; then
+  echo "curl download failed; retrying with wget..."
+  rm -f "$SPARK_TGZ"
+  if ! timeout 420 wget -O "$SPARK_TGZ" --tries=3 --timeout=60 --continue --progress=dot:giga "$SPARK_URL"; then
+    echo "Failed to download Spark tarball" >&2
+    exit 1
+  fi
+fi
 tar -xzf "$SPARK_TGZ"
 rm -rf spark
 mv spark-3.5.0-bin-hadoop3 spark

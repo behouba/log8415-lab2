@@ -65,11 +65,23 @@ ssh("""
 set -e
 cd ~
 HADOOP_TGZ=hadoop-3.3.6.tar.gz
-HADOOP_URL_PRIMARY=https://dlcdn.apache.org/hadoop/common/hadoop-3.3.6/hadoop-3.3.6.tar.gz
-HADOOP_URL_FALLBACK=https://archive.apache.org/dist/hadoop/common/hadoop-3.3.6/hadoop-3.3.6.tar.gz
-DL_OPTS="--fail --location --retry 5 --retry-all-errors --retry-delay 5 --connect-timeout 20 --max-time 900 --continue-at -"
-if ! curl $DL_OPTS -o "$HADOOP_TGZ" "$HADOOP_URL_PRIMARY"; then
-  curl $DL_OPTS -o "$HADOOP_TGZ" "$HADOOP_URL_FALLBACK"
+HADOOP_URLS=( \\
+  https://dlcdn.apache.org/hadoop/common/hadoop-3.3.6/hadoop-3.3.6.tar.gz \\
+  https://archive.apache.org/dist/hadoop/common/hadoop-3.3.6/hadoop-3.3.6.tar.gz \\
+  https://downloads.apache.org/hadoop/common/hadoop-3.3.6/hadoop-3.3.6.tar.gz \\
+)
+DL_OPTS="--fail --location --retry 5 --retry-all-errors --retry-delay 5 --retry-max-time 300 --connect-timeout 20 --max-time 300 --speed-limit 10240 --speed-time 30 --continue-at -"
+rm -f "$HADOOP_TGZ.partial"
+for url in "${HADOOP_URLS[@]}"; do
+  echo "Downloading Hadoop from $url"
+  if curl $DL_OPTS -o "$HADOOP_TGZ.partial" "$url"; then
+    mv "$HADOOP_TGZ.partial" "$HADOOP_TGZ"
+    break
+  fi
+done
+if [ ! -f "$HADOOP_TGZ" ]; then
+  echo "Failed to download Hadoop tarball from all mirrors" >&2
+  exit 1
 fi
 tar -xzf "$HADOOP_TGZ"
 rm -rf hadoop
@@ -218,11 +230,23 @@ ssh("""
 set -e
 cd ~
 SPARK_TGZ=spark-3.5.0-bin-hadoop3.tgz
-SPARK_URL_PRIMARY=https://dlcdn.apache.org/spark/spark-3.5.0/spark-3.5.0-bin-hadoop3.tgz
-SPARK_URL_FALLBACK=https://archive.apache.org/dist/spark/spark-3.5.0/spark-3.5.0-bin-hadoop3.tgz
-DL_OPTS="--fail --location --retry 5 --retry-all-errors --retry-delay 5 --connect-timeout 20 --max-time 900 --continue-at -"
-if ! curl $DL_OPTS -o "$SPARK_TGZ" "$SPARK_URL_PRIMARY"; then
-  curl $DL_OPTS -o "$SPARK_TGZ" "$SPARK_URL_FALLBACK"
+SPARK_URLS=( \\
+  https://dlcdn.apache.org/spark/spark-3.5.0/spark-3.5.0-bin-hadoop3.tgz \\
+  https://archive.apache.org/dist/spark/spark-3.5.0/spark-3.5.0-bin-hadoop3.tgz \\
+  https://downloads.apache.org/spark/spark-3.5.0/spark-3.5.0-bin-hadoop3.tgz \\
+)
+DL_OPTS="--fail --location --retry 5 --retry-all-errors --retry-delay 5 --retry-max-time 300 --connect-timeout 20 --max-time 300 --speed-limit 10240 --speed-time 30 --continue-at -"
+rm -f "$SPARK_TGZ.partial"
+for url in "${SPARK_URLS[@]}"; do
+  echo "Downloading Spark from $url"
+  if curl $DL_OPTS -o "$SPARK_TGZ.partial" "$url"; then
+    mv "$SPARK_TGZ.partial" "$SPARK_TGZ"
+    break
+  fi
+done
+if [ ! -f "$SPARK_TGZ" ]; then
+  echo "Failed to download Spark tarball from all mirrors" >&2
+  exit 1
 fi
 tar -xzf "$SPARK_TGZ"
 rm -rf spark

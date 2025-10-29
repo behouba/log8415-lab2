@@ -67,8 +67,9 @@ cd ~
 HADOOP_TGZ=hadoop-3.3.6.tar.gz
 HADOOP_URL_PRIMARY=https://dlcdn.apache.org/hadoop/common/hadoop-3.3.6/hadoop-3.3.6.tar.gz
 HADOOP_URL_FALLBACK=https://archive.apache.org/dist/hadoop/common/hadoop-3.3.6/hadoop-3.3.6.tar.gz
-if ! curl -fL -o "$HADOOP_TGZ" "$HADOOP_URL_PRIMARY"; then
-  curl -fL -o "$HADOOP_TGZ" "$HADOOP_URL_FALLBACK"
+DL_OPTS="--fail --location --retry 5 --retry-all-errors --retry-delay 5 --connect-timeout 20 --max-time 900 --continue-at -"
+if ! curl $DL_OPTS -o "$HADOOP_TGZ" "$HADOOP_URL_PRIMARY"; then
+  curl $DL_OPTS -o "$HADOOP_TGZ" "$HADOOP_URL_FALLBACK"
 fi
 tar -xzf "$HADOOP_TGZ"
 rm -rf hadoop
@@ -219,8 +220,9 @@ cd ~
 SPARK_TGZ=spark-3.5.0-bin-hadoop3.tgz
 SPARK_URL_PRIMARY=https://dlcdn.apache.org/spark/spark-3.5.0/spark-3.5.0-bin-hadoop3.tgz
 SPARK_URL_FALLBACK=https://archive.apache.org/dist/spark/spark-3.5.0/spark-3.5.0-bin-hadoop3.tgz
-if ! curl -fL -o "$SPARK_TGZ" "$SPARK_URL_PRIMARY"; then
-  curl -fL -o "$SPARK_TGZ" "$SPARK_URL_FALLBACK"
+DL_OPTS="--fail --location --retry 5 --retry-all-errors --retry-delay 5 --connect-timeout 20 --max-time 900 --continue-at -"
+if ! curl $DL_OPTS -o "$SPARK_TGZ" "$SPARK_URL_PRIMARY"; then
+  curl $DL_OPTS -o "$SPARK_TGZ" "$SPARK_URL_FALLBACK"
 fi
 tar -xzf "$SPARK_TGZ"
 rm -rf spark

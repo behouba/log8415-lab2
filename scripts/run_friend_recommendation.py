@@ -27,7 +27,7 @@ SSH_BASE = [
 SCP_BASE = ["scp", "-o", "StrictHostKeyChecking=no"]
 
 def ssh(host, cmd):
-    remote = f"bash -lc '{cmd}'"
+    remote = f'bash -lc "{cmd}"'
     result = subprocess.run(
         SSH_BASE + ["-i", KEY_PATH, f"{SSH_USER}@{host}", remote],
         stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True

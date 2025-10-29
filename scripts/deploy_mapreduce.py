@@ -20,13 +20,25 @@ SSH_BASE = [
     "-o", "ConnectionAttempts=10",
 ]
 
-def ssh(host, cmd):
+def ssh(host, cmd, show_output=True):
     remote = f"bash -lc '{cmd}'"
-    result = subprocess.run(
+    proc = subprocess.Popen(
         SSH_BASE + ["-i", KEY_PATH, f"{SSH_USER}@{host}", remote],
-        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        bufsize=1,
     )
-    return result
+    output_lines = []
+    try:
+        if proc.stdout:
+            for line in proc.stdout:
+                output_lines.append(line)
+                if show_output:
+                    print(line, end="")
+    finally:
+        proc.wait()
+    return proc.returncode, "".join(output_lines)
 
 def scp_upload(host, local_path, remote_path):
     result = subprocess.run(
@@ -54,14 +66,23 @@ def wait_for_ssh(host):
 
 def setup_instance(host, role):
     print(f"\n  Setting up {host} ({role})...")
-    print(f"  Installing Python 3...")
-    result = ssh(host, "sudo apt-get update -y && sudo apt-get install -y python3")
-    if result.returncode != 0:
-        print(f"  ERROR: Failed to install Python on {host}")
-        print(result.stdout)
-        return False
+    code, _ = ssh(host, "python3 --version", show_output=False)
+    if code == 0:
+        print("  Python 3 already present; skipping install.")
+    else:
+        print("  Installing Python 3...")
+        install_cmd = (
+            "sudo apt-get update -y && "
+            "sudo DEBIAN_FRONTEND=noninteractive "
+            "apt-get install -y python3 python3-venv python3-pip"
+        )
+        code, output = ssh(host, install_cmd)
+        if code != 0:
+            print(f"  ERROR: Failed to install Python on {host}")
+            print(output)
+            return False
 
-    ssh(host, "mkdir -p ~/mapreduce ~/data")
+    ssh(host, "mkdir -p ~/mapreduce ~/data", show_output=False)
 
     print(f"  ✅ {host} setup complete")
     return True
@@ -94,7 +115,7 @@ for mapper in instances["mappers"]:
         print(f"  ERROR: Failed to upload to {host}")
         print(result.stdout)
         sys.exit(1)
-    ssh(host, "chmod +x ~/mapreduce/mapper.py")
+    ssh(host, "chmod +x ~/mapreduce/mapper.py", show_output=False)
 
 print("\nStep 4: Deploying reducer script to reducer instances...")
 for reducer in instances["reducers"]:
@@ -105,7 +126,7 @@ for reducer in instances["reducers"]:
         print(f"  ERROR: Failed to upload to {host}")
         print(result.stdout)
         sys.exit(1)
-    ssh(host, "chmod +x ~/mapreduce/reducer.py")
+    ssh(host, "chmod +x ~/mapreduce/reducer.py", show_output=False)
 
 print("\n✅ Deployment complete!")
 print(f"Deployed to {len(instances['mappers'])} mappers, {len(instances['reducers'])} reducers")

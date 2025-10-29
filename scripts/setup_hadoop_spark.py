@@ -60,17 +60,30 @@ def ensure_ssh_access():
 
 def ssh(cmd, show_output=True):
     remote = f"bash -lc '{cmd}'"
-    result = subprocess.run(
+    proc = subprocess.Popen(
         SSH_BASE + ["-i", KEY_PATH, f"{SSH_USER}@{HOST}", remote],
-        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        bufsize=1
     )
-    if show_output and result.stdout:
-        print(result.stdout, end="")
-    if result.returncode != 0:
-        print(f"ERROR: Command failed with exit code {result.returncode}")
-        print(result.stdout)
+    output_lines = []
+    try:
+        if proc.stdout:
+            for line in proc.stdout:
+                output_lines.append(line)
+                if show_output:
+                    print(line, end="")
+    finally:
+        proc.wait()
+    if proc.returncode != 0:
+        print(f"ERROR: Command failed with exit code {proc.returncode}")
+        if show_output:
+            sys.exit(1)
+        else:
+            print("".join(output_lines))
         sys.exit(1)
-    return result
+    return "".join(output_lines)
 
 ensure_ssh_access()
 

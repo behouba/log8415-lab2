@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import hashlib
 import json
 import os
 import shutil
@@ -109,6 +110,11 @@ def sort_user_key(user_id):
     return int(user_id) if user_id.isdigit() else user_id
 
 
+def shard_for_pair(pair_key, num_reducers):
+    digest = hashlib.md5(pair_key.encode("utf-8")).hexdigest()
+    return int(digest[:8], 16) % num_reducers
+
+
 print("=== Friend Recommendation MapReduce ===\n")
 
 print("Step 1: Splitting input data into chunks for mappers...")
@@ -211,29 +217,56 @@ for host, remote_path, filename in mapper_outputs:
 
 print(f"✅ Downloaded {len(local_mapper_outputs)} mapper outputs\n")
 
-print("Step 4: Running reducers...")
+print("Step 4: Preparing reducer partitions...")
 num_reducers = len(instances["reducers"])
+partition_dir = "data/reducer_partitions"
+shutil.rmtree(partition_dir, ignore_errors=True)
+os.makedirs(partition_dir, exist_ok=True)
+
+partition_paths = [os.path.join(partition_dir, f"reducer_{idx}.txt") for idx in range(num_reducers)]
+partition_handles = [open(path, "w") for path in partition_paths]
+
+try:
+    for local_output in local_mapper_outputs:
+        print(f"  Partitioning {local_output}...")
+        with open(local_output, "r") as src:
+            for line in src:
+                parts = line.split("\t", 1)
+                if len(parts) != 2:
+                    continue
+                pair_key = parts[0]
+                shard = shard_for_pair(pair_key, num_reducers)
+                partition_handles[shard].write(line)
+finally:
+    for handle in partition_handles:
+        handle.close()
+
+for idx, path in enumerate(partition_paths):
+    size_bytes = os.path.getsize(path)
+    size_mb = size_bytes / (1024 * 1024)
+    print(f"  Reducer {idx + 1} partition: {path} ({size_mb:.2f} MB)")
+
+print("✅ Reducer partitions prepared\n")
+
+print("Step 5: Running reducers...")
 reducer_results = []
 
 for idx, reducer in enumerate(instances["reducers"]):
     host = reducer["public_ip"]
     print(f"\n  Reducer {idx + 1}/{num_reducers} ({host}):")
 
-    remote_mapper_files = []
-    for j, local_output in enumerate(local_mapper_outputs):
-        remote_path = f"~/data/mapper_input_{j}.txt"
-        print(f"    Uploading mapper output {j + 1}...")
-        result = scp_upload(host, local_output, remote_path)
-        if result.returncode != 0:
-            print(f"    ERROR uploading: {result.stderr}")
-            sys.exit(1)
-        remote_mapper_files.append(remote_path)
+    partition_path = partition_paths[idx]
+    remote_input = f"~/data/reducer_input_{idx}.txt"
+    print(f"    Uploading partition file ({partition_path})...")
+    result = scp_upload(host, partition_path, remote_input)
+    if result.returncode != 0:
+        print(f"    ERROR uploading: {result.stderr}")
+        sys.exit(1)
 
     remote_output = f"~/data/reducer_output_{idx}.txt"
     env_prefix = f"PARTITION_INDEX={idx} PARTITION_TOTAL={num_reducers} "
     reducer_cmd = (
-        f"{env_prefix}python3 ~/mapreduce/reducer.py "
-        f"{' '.join(remote_mapper_files)} {remote_output}"
+        f"{env_prefix}python3 ~/mapreduce/reducer.py {remote_input} {remote_output}"
     )
     print("    Running reducer...")
     result = ssh(host, reducer_cmd, stream_output=True, label=f"reducer-{idx+1}")
@@ -246,7 +279,7 @@ for idx, reducer in enumerate(instances["reducers"]):
 
 print(f"\n✅ All {num_reducers} reducers completed\n")
 
-print("Step 5: Collecting reducer outputs...")
+print("Step 6: Collecting reducer outputs...")
 shutil.rmtree("data/reducer_outputs", ignore_errors=True)
 os.makedirs("data/reducer_outputs", exist_ok=True)
 
@@ -266,7 +299,7 @@ if not reducer_local_files:
 
 print(f"\n✅ Reducer outputs downloaded: {len(reducer_local_files)} file(s)\n")
 
-print("Step 6: Combining reducer outputs and generating final recommendations...")
+print("Step 7: Combining reducer outputs and generating final recommendations...")
 user_candidate_counts = {}
 
 for local_file in reducer_local_files:
@@ -316,7 +349,7 @@ with open(final_output, "w") as f:
 
 print(f"  Wrote final recommendations to {final_output}")
 
-print("Step 7: Extracting report users...")
+print("Step 8: Extracting report users...")
 REPORT_USERS = [
     "924",
     "8941",

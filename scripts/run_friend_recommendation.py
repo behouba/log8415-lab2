@@ -31,10 +31,24 @@ SSH_BASE = [
     "-o",
     "ServerAliveInterval=15",
     "-o",
+    "ServerAliveCountMax=60",
+    "-o",
+    "ConnectionAttempts=10",
+    "-o",
     "ConnectTimeout=20",
 ]
 
-SCP_BASE = ["scp", "-o", "StrictHostKeyChecking=no"]
+SCP_BASE = [
+    "scp",
+    "-o",
+    "StrictHostKeyChecking=no",
+    "-o",
+    "ServerAliveInterval=15",
+    "-o",
+    "ServerAliveCountMax=60",
+    "-o",
+    "ConnectTimeout=20",
+]
 
 
 def ssh(host, cmd, stream_output=False, label=None):

@@ -188,8 +188,10 @@ for idx, reducer in enumerate(instances["reducers"]):
         remote_mapper_files.append(remote_path)
 
     remote_output = f"~/data/reducer_output_{idx}.txt"
+    env_prefix = f"PARTITION_INDEX={idx} PARTITION_TOTAL={num_reducers} "
     reducer_cmd = (
-        f"python3 ~/mapreduce/reducer.py {' '.join(remote_mapper_files)} {remote_output}"
+        f"{env_prefix}python3 ~/mapreduce/reducer.py "
+        f"{' '.join(remote_mapper_files)} {remote_output}"
     )
     print("    Running reducer...")
     result = ssh(host, reducer_cmd)
@@ -206,7 +208,7 @@ print("Step 5: Collecting reducer outputs...")
 shutil.rmtree("data/reducer_outputs", ignore_errors=True)
 os.makedirs("data/reducer_outputs", exist_ok=True)
 
-final_output = None
+reducer_local_files = []
 for host, remote_path, filename in reducer_results:
     local_path = f"data/reducer_outputs/{filename}"
     print(f"  Downloading from {host}...")
@@ -215,17 +217,64 @@ for host, remote_path, filename in reducer_results:
         print(f"    ERROR downloading: {result.stderr}")
         sys.exit(1)
 
-    final_output = os.path.join(ARTIFACTS_DIR, "friend_recommendations.txt")
-    shutil.copy(local_path, final_output)
-    print(f"  Saved to {final_output}")
-    break
+    reducer_local_files.append(local_path)
 
-if not final_output:
+if not reducer_local_files:
     sys.exit("ERROR: No reducer outputs were downloaded.")
 
-print("\n✅ Reducer output downloaded\n")
+print(f"\n✅ Reducer outputs downloaded: {len(reducer_local_files)} file(s)\n")
 
-print("Step 6: Normalizing recommendations and extracting report users...")
+print("Step 6: Combining reducer outputs and generating final recommendations...")
+user_candidate_counts = {}
+
+for local_file in reducer_local_files:
+    print(f"  Merging results from {local_file}...")
+    with open(local_file, "r") as f:
+        for line in f:
+            parts = line.rstrip("\n").split("\t")
+            if len(parts) != 2:
+                continue
+            user_id, recs = parts
+            if user_id not in user_candidate_counts:
+                user_candidate_counts[user_id] = {}
+            rec_items = [r for r in recs.split(",") if r]
+            for item in rec_items:
+                if ":" not in item:
+                    continue
+                candidate, count_str = item.split(":", 1)
+                candidate = candidate.strip()
+                count_str = count_str.strip()
+                if not candidate or not count_str:
+                    continue
+                try:
+                    count_val = int(count_str)
+                except ValueError:
+                    continue
+                current = user_candidate_counts[user_id].get(candidate, 0)
+                user_candidate_counts[user_id][candidate] = current + count_val
+
+final_output = os.path.join(ARTIFACTS_DIR, "friend_recommendations.txt")
+combined_recommendations = {}
+
+with open(final_output, "w") as f:
+    for user_id in sorted(all_users, key=sort_user_key):
+        candidate_counts = user_candidate_counts.get(user_id, {})
+        if candidate_counts:
+            sorted_candidates = sorted(
+                candidate_counts.items(),
+                key=lambda x: (-x[1], sort_user_key(x[0])),
+            )
+            top_candidates = [candidate for candidate, _ in sorted_candidates[:10]]
+            recs_str = ",".join(top_candidates)
+        else:
+            recs_str = ""
+
+        combined_recommendations[user_id] = recs_str
+        f.write(f"{user_id}\t{recs_str}\n")
+
+print(f"  Wrote final recommendations to {final_output}")
+
+print("Step 7: Extracting report users...")
 REPORT_USERS = [
     "924",
     "8941",
@@ -239,26 +288,7 @@ REPORT_USERS = [
     "9993",
 ]
 
-recommendations = {}
-with open(final_output, "r") as f:
-    for line in f:
-        parts = line.rstrip("\n").split("\t")
-        if len(parts) == 2:
-            user_id, recs = parts
-            recommendations[user_id] = recs.strip()
-
-all_users.update(recommendations.keys())
-combined_recommendations = {}
-for user_id in all_users:
-    combined_recommendations[user_id] = recommendations.get(user_id, "")
-
-sorted_users = sorted(combined_recommendations.keys(), key=sort_user_key)
-with open(final_output, "w") as f:
-    for user_id in sorted_users:
-        recs = combined_recommendations[user_id]
-        f.write(f"{user_id}\t{recs}\n")
-
-print(f"  Normalized full output with {len(sorted_users)} users")
+print(f"  Final output covers {len(all_users)} users")
 
 print("\n=== Friend Recommendations for Report Users ===\n")
 report_output = os.path.join(ARTIFACTS_DIR, "report_recommendations.txt")

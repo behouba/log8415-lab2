@@ -37,8 +37,31 @@ SSH_BASE = [
 SCP_BASE = ["scp", "-o", "StrictHostKeyChecking=no"]
 
 
-def ssh(host, cmd):
+def ssh(host, cmd, stream_output=False, label=None):
     remote = f'bash -lc "{cmd}"'
+    if stream_output:
+        process = subprocess.Popen(
+            SSH_BASE + ["-i", KEY_PATH, f"{SSH_USER}@{host}", remote],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            bufsize=1,
+        )
+        collected = []
+        prefix = f"[{label}] " if label else ""
+        try:
+            if process.stdout:
+                for line in process.stdout:
+                    collected.append(line)
+                    print(f"{prefix}{line}", end="")
+        finally:
+            process.wait()
+        return subprocess.CompletedProcess(
+            args=process.args,
+            returncode=process.returncode,
+            stdout="".join(collected),
+            stderr="",
+        )
     result = subprocess.run(
         SSH_BASE + ["-i", KEY_PATH, f"{SSH_USER}@{host}", remote],
         stdout=subprocess.PIPE,
@@ -143,7 +166,12 @@ for i, mapper in enumerate(instances["mappers"]):
         sys.exit(1)
 
     print("    Running mapper...")
-    result = ssh(host, f"python3 ~/mapreduce/mapper.py {remote_chunk} {remote_output}")
+    result = ssh(
+        host,
+        f"python3 ~/mapreduce/mapper.py {remote_chunk} {remote_output}",
+        stream_output=True,
+        label=f"mapper-{i+1}",
+    )
     if result.returncode != 0:
         print(f"    ERROR running mapper: {result.stderr}")
         sys.exit(1)
@@ -194,7 +222,7 @@ for idx, reducer in enumerate(instances["reducers"]):
         f"{' '.join(remote_mapper_files)} {remote_output}"
     )
     print("    Running reducer...")
-    result = ssh(host, reducer_cmd)
+    result = ssh(host, reducer_cmd, stream_output=True, label=f"reducer-{idx+1}")
     if result.returncode != 0:
         print(f"    ERROR running reducer: {result.stderr}")
         sys.exit(1)

@@ -231,12 +231,12 @@ try:
         print(f"  Partitioning {local_output}...")
         with open(local_output, "r") as src:
             for line in src:
-                parts = line.split("\t", 1)
+                parts = line.rstrip("\n").split("\t")
                 if len(parts) != 2:
                     continue
-                pair_key = parts[0]
+                pair_key, value = parts
                 shard = shard_for_pair(pair_key, num_reducers)
-                partition_handles[shard].write(line)
+                partition_handles[shard].write(f"{pair_key}\t{value}\n")
 finally:
     for handle in partition_handles:
         handle.close()

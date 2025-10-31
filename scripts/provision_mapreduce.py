@@ -8,8 +8,20 @@ SG_ID    = os.getenv("AWS_INSTANCE_SG_ID")
 AMI_ID   = os.getenv("AWS_AMI_ID", "")
 SUBNETS  = os.getenv("AWS_SUBNET_IDS", "").split(",") if os.getenv("AWS_SUBNET_IDS") else []
 
-NUM_MAPPERS = 3
-NUM_REDUCERS = 2
+def parse_positive_int(env_key, default):
+    value = os.getenv(env_key)
+    if not value:
+        return default
+    try:
+        parsed = int(value)
+        if parsed <= 0:
+            raise ValueError
+        return parsed
+    except ValueError:
+        sys.exit(f"Invalid value for {env_key}: {value}. Must be a positive integer.")
+
+NUM_MAPPERS = parse_positive_int("MAPREDUCE_NUM_MAPPERS", 3)
+NUM_REDUCERS = parse_positive_int("MAPREDUCE_NUM_REDUCERS", 6)
 
 if not (KEY_NAME and SG_ID and SUBNETS):
     sys.exit("Missing one of: AWS_KEY_NAME, AWS_INSTANCE_SG_ID, AWS_SUBNET_IDS")

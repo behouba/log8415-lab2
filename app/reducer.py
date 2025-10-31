@@ -5,8 +5,7 @@ from collections import defaultdict
 
 
 def reduce_friends(input_files, output_file):
-    pair_counts = defaultdict(int)
-    blocked_pairs = set()
+    user_recommendations = defaultdict(dict)
 
     print(f"[Reducer] Reading {len(input_files)} mapper output files...", file=sys.stderr)
     for idx, input_file in enumerate(input_files):
@@ -29,37 +28,32 @@ def reduce_friends(input_files, output_file):
                 if len(parts) != 2:
                     continue
 
-                pair_key, marker = parts
-
-                if marker == "-1":
-                    blocked_pairs.add(pair_key)
-                    pair_counts.pop(pair_key, None)
+                pair_key, count_str = parts
+                try:
+                    mutual_count = int(count_str)
+                except ValueError:
                     continue
 
-                if pair_key in blocked_pairs:
+                if mutual_count <= 0:
                     continue
 
-                pair_counts[pair_key] += 1
+                users = pair_key.split(",")
+                if len(users) != 2:
+                    continue
+
+                user1, user2 = users
+                user_recommendations[user1][user2] = mutual_count
+                user_recommendations[user2][user1] = mutual_count
 
         print(
             f"[Reducer] ✓ Completed file {idx+1}/{len(input_files)} ({line_count} lines total)",
             file=sys.stderr,
         )
 
-    print(f"[Reducer] Aggregating {len(pair_counts)} candidate pairs...", file=sys.stderr)
-    user_recommendations = defaultdict(dict)
-
-    for pair_key, mutual_count in pair_counts.items():
-        if mutual_count == 0:
-            continue
-
-        users = pair_key.split(",")
-        if len(users) != 2:
-            continue
-
-        user1, user2 = users
-        user_recommendations[user1][user2] = mutual_count
-        user_recommendations[user2][user1] = mutual_count
+    print(
+        f"[Reducer] Aggregated recommendations for {len(user_recommendations)} users",
+        file=sys.stderr,
+    )
 
     print(
         f"[Reducer] Writing intermediate recommendations to {output_file}...",

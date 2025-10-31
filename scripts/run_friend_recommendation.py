@@ -5,6 +5,7 @@ import os
 import shutil
 import subprocess
 import sys
+from collections import defaultdict
 
 KEY_PATH = os.getenv("AWS_KEY_PATH")
 if not KEY_PATH:
@@ -223,28 +224,47 @@ partition_dir = "data/reducer_partitions"
 shutil.rmtree(partition_dir, ignore_errors=True)
 os.makedirs(partition_dir, exist_ok=True)
 
-partition_paths = [os.path.join(partition_dir, f"reducer_{idx}.txt") for idx in range(num_reducers)]
-partition_handles = [open(path, "w") for path in partition_paths]
+partition_counts = [defaultdict(lambda: [0, False]) for _ in range(num_reducers)]
+total_partition_lines = 0
 
-try:
-    for local_output in local_mapper_outputs:
-        print(f"  Partitioning {local_output}...")
-        with open(local_output, "r") as src:
-            for line in src:
-                parts = line.rstrip("\n").split("\t")
-                if len(parts) != 2:
-                    continue
-                pair_key, value = parts
-                shard = shard_for_pair(pair_key, num_reducers)
-                partition_handles[shard].write(f"{pair_key}\t{value}\n")
-finally:
-    for handle in partition_handles:
-        handle.close()
+for local_output in local_mapper_outputs:
+    print(f"  Aggregating {local_output}...")
+    with open(local_output, "r") as src:
+        for line in src:
+            total_partition_lines += 1
+            parts = line.rstrip("\n").split("\t")
+            if len(parts) != 2:
+                continue
+            pair_key, marker = parts
+            shard = shard_for_pair(pair_key, num_reducers)
+            state = partition_counts[shard].get(pair_key)
+            if state is None:
+                state = [0, False]
+                partition_counts[shard][pair_key] = state
 
-for idx, path in enumerate(partition_paths):
-    size_bytes = os.path.getsize(path)
-    size_mb = size_bytes / (1024 * 1024)
-    print(f"  Reducer {idx + 1} partition: {path} ({size_mb:.2f} MB)")
+            if marker == "-1":
+                state[1] = True
+                state[0] = 0
+            else:
+                if not state[1]:
+                    state[0] += 1
+
+print(f"  Total mapper tuples processed for partitioning: {total_partition_lines}")
+
+partition_paths = []
+for idx, counts in enumerate(partition_counts):
+    path = os.path.join(partition_dir, f"reducer_{idx}.txt")
+    partition_paths.append(path)
+    pair_total = 0
+    with open(path, "w") as outfile:
+        for pair_key, (count, blocked) in counts.items():
+            if blocked or count == 0:
+                continue
+            outfile.write(f"{pair_key}\t{count}\n")
+            pair_total += 1
+    size_mb = os.path.getsize(path) / (1024 * 1024)
+    print(f"  Reducer {idx + 1} partition: {pair_total} pairs, {size_mb:.2f} MB")
+    counts.clear()
 
 print("✅ Reducer partitions prepared\n")
 

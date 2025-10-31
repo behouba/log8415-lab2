@@ -1,27 +1,19 @@
 #!/usr/bin/env python3
-import hashlib
 import os
 import sys
 from collections import defaultdict
 
 
-def should_process_pair(pair_key, partition_index, partition_total):
-    if partition_index is None or partition_total is None:
-        return True
-    digest = hashlib.md5(pair_key.encode("utf-8")).hexdigest()
-    shard = int(digest[:8], 16) % partition_total
-    return shard == partition_index
-
-
-def reduce_friends(input_files, output_file, partition_index=None, partition_total=None):
-    pair_mutuals = defaultdict(list)
+def reduce_friends(input_files, output_file):
+    pair_counts = defaultdict(int)
+    blocked_pairs = set()
 
     print(f"[Reducer] Reading {len(input_files)} mapper output files...", file=sys.stderr)
     for idx, input_file in enumerate(input_files):
         print(f"[Reducer] Processing file {idx+1}/{len(input_files)}: {input_file}", file=sys.stderr)
         line_count = 0
         with open(input_file, "r") as f:
-            for line in f:
+            for raw_line in f:
                 line_count += 1
                 if line_count % 100000 == 0:
                     print(
@@ -29,7 +21,7 @@ def reduce_friends(input_files, output_file, partition_index=None, partition_tot
                         file=sys.stderr,
                     )
 
-                line = line.strip()
+                line = raw_line.rstrip("\n")
                 if not line:
                     continue
 
@@ -37,36 +29,27 @@ def reduce_friends(input_files, output_file, partition_index=None, partition_tot
                 if len(parts) != 2:
                     continue
 
-                pair_key = parts[0]  # "user1,user2"
-                mutual_or_flag = parts[1]  # mutual friend ID or "-1"
+                pair_key, marker = parts
 
-                if not should_process_pair(pair_key, partition_index, partition_total):
+                if marker == "-1":
+                    blocked_pairs.add(pair_key)
+                    pair_counts.pop(pair_key, None)
                     continue
 
-                pair_mutuals[pair_key].append(mutual_or_flag)
+                if pair_key in blocked_pairs:
+                    continue
+
+                pair_counts[pair_key] += 1
 
         print(
             f"[Reducer] ✓ Completed file {idx+1}/{len(input_files)} ({line_count} lines total)",
             file=sys.stderr,
         )
 
-    print(f"[Reducer] Aggregating {len(pair_mutuals)} unique pairs...", file=sys.stderr)
+    print(f"[Reducer] Aggregating {len(pair_counts)} candidate pairs...", file=sys.stderr)
     user_recommendations = defaultdict(dict)
 
-    pair_count = 0
-    for pair_key, mutuals in pair_mutuals.items():
-        pair_count += 1
-        if pair_count % 50000 == 0:
-            print(
-                f"[Reducer]   ... processed {pair_count}/{len(pair_mutuals)} pairs",
-                file=sys.stderr,
-            )
-        if "-1" in mutuals:
-            continue
-
-        mutual_friends = [m for m in mutuals if m != "-1"]
-        mutual_count = len(mutual_friends)
-
+    for pair_key, mutual_count in pair_counts.items():
         if mutual_count == 0:
             continue
 
@@ -101,24 +84,9 @@ if __name__ == "__main__":
     input_files = sys.argv[1:-1]
     output_file = sys.argv[-1]
 
-    partition_index = os.getenv("PARTITION_INDEX")
-    partition_total = os.getenv("PARTITION_TOTAL")
-    if partition_index is not None and partition_total is not None:
-        try:
-            partition_index = int(partition_index)
-            partition_total = int(partition_total)
-        except ValueError:
-            print(
-                "[Reducer] WARN: Invalid PARTITION_INDEX/PARTITION_TOTAL values, ignoring partitioning.",
-                file=sys.stderr,
-            )
-            partition_index = None
-            partition_total = None
-
     print(
-        f"Reducer processing {len(input_files)} mapper output(s) -> {output_file} "
-        f"(partition={partition_index}/{partition_total})",
+        f"Reducer processing {len(input_files)} mapper output(s) -> {output_file}",
         file=sys.stderr,
     )
-    reduce_friends(input_files, output_file, partition_index, partition_total)
+    reduce_friends(input_files, output_file)
     print(f"Reducer complete: {output_file}", file=sys.stderr)

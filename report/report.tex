@@ -96,7 +96,7 @@ Linux & 0.88 & 0.89 & 0.03 & 0.83 -- 0.94 \\
 
 \textbf{Linux vs. Spark:} Linux is 11.4× faster than Spark. For larger datasets, Spark would likely perform better when parallelism benefits outweigh the framework overhead.
 
-\textbf{Consistency:} Hadoop shows the highest variability (σ = 0.96s), while Spark has low variability (σ = 0.12s) across runs.
+\textbf{Consistency:} Hadoop shows the highest variability ($\sigma = 0.96$ s), while Spark has low variability ($\sigma = 0.12$ s) across runs.
 
 \begin{figure}[H]
     \centering
@@ -359,34 +359,34 @@ python scripts/run_friend_recommendation.py
 
 \begin{verbatim}
 lab2/
-├── app/
-│   ├── mapper.py           # Friend recommendation mapper
-│   └── reducer.py          # Friend recommendation reducer
-├── wordcount/
-│   ├── hadoop_wordcount.sh
-│   ├── spark_wordcount.py
-│   └── linux_wordcount.sh
-├── scripts/
-│   ├── bootstrap_env.sh
-│   ├── provision_wordcount.py
-│   ├── provision_mapreduce.py
-│   ├── setup_hadoop_spark.py
-│   ├── deploy_mapreduce.py
-│   ├── run_wordcount_benchmarks.py
-│   ├── run_friend_recommendation.py
-│   └── teardown.py
-├── plots/
-│   └── generate_plots.py
-├── artifacts/              # Results directory
-│   ├── benchmark_results.json
-│   ├── summary_statistics.json
-│   ├── friend_recommendations.txt
-│   ├── report_recommendations.txt
-│   └── plot_*.png
-├── run_part1.sh           # Part 1 automation
-├── run_part2.sh           # Part 2 automation
-├── stop.sh                # Cleanup script
-└── README.md
+|- app/
+|  |- mapper.py           # Friend recommendation mapper
+|  |- reducer.py          # Friend recommendation reducer
+|- wordcount/
+|  |- hadoop_wordcount.sh
+|  |- spark_wordcount.py
+|  |- linux_wordcount.sh
+|- scripts/
+|  |- bootstrap_env.sh
+|  |- provision_wordcount.py
+|  |- provision_mapreduce.py
+|  |- setup_hadoop_spark.py
+|  |- deploy_mapreduce.py
+|  |- run_wordcount_benchmarks.py
+|  |- run_friend_recommendation.py
+|  |- teardown.py
+|- plots/
+|  |- generate_plots.py
+|- artifacts/              # Results directory
+|  |- benchmark_results.json
+|  |- summary_statistics.json
+|  |- friend_recommendations.txt
+|  |- report_recommendations.txt
+|  |- plot_*.png
+|- run_part1.sh           # Part 1 automation
+|- run_part2.sh           # Part 2 automation
+|- stop.sh                # Cleanup script
+|- README.md
 \end{verbatim}
 
 \end{document}

@@ -1,0 +1,78 @@
+{
+  "mappers": [
+    {
+      "id": "i-06aac27795b3d08b8",
+      "type": "t2.micro",
+      "state": "running",
+      "public_ip": "98.85.228.214",
+      "private_ip": "172.31.37.48",
+      "role": "mapper"
+    },
+    {
+      "id": "i-0f64894bb62aaa596",
+      "type": "t2.micro",
+      "state": "running",
+      "public_ip": "44.203.79.142",
+      "private_ip": "172.31.9.79",
+      "role": "mapper"
+    },
+    {
+      "id": "i-0ec5b498e3f8f202c",
+      "type": "t2.micro",
+      "state": "running",
+      "public_ip": "54.86.223.13",
+      "private_ip": "172.31.37.81",
+      "role": "mapper"
+    }
+  ],
+  "reducers": [
+    {
+      "id": "i-094a330a9464f80e6",
+      "type": "t2.micro",
+      "state": "running",
+      "public_ip": "35.172.117.9",
+      "private_ip": "172.31.44.231",
+      "role": "reducer"
+    },
+    {
+      "id": "i-0d2f20def10f32059",
+      "type": "t2.micro",
+      "state": "running",
+      "public_ip": "13.218.178.229",
+      "private_ip": "172.31.13.250",
+      "role": "reducer"
+    },
+    {
+      "id": "i-01798fd6b57fb34ec",
+      "type": "t2.micro",
+      "state": "running",
+      "public_ip": "54.81.11.35",
+      "private_ip": "172.31.41.11",
+      "role": "reducer"
+    },
+    {
+      "id": "i-0dc6705bf8fda3a82",
+      "type": "t2.micro",
+      "state": "running",
+      "public_ip": "98.84.158.79",
+      "private_ip": "172.31.8.22",
+      "role": "reducer"
+    },
+    {
+      "id": "i-0d6c95705b565db99",
+      "type": "t2.micro",
+      "state": "running",
+      "public_ip": "3.86.68.169",
+      "private_ip": "172.31.38.95",
+      "role": "reducer"
+    },
+    {
+      "id": "i-097c994e7737ab375",
+      "type": "t2.micro",
+      "state": "running",
+      "public_ip": "13.223.97.153",
+      "private_ip": "172.31.0.158",
+      "role": "reducer"
+    }
+  ]
+}

@@ -1,0 +1,569 @@
+[
+  {
+    "dataset": "dataset_1.txt",
+    "method": "hadoop",
+    "iteration": 1,
+    "execution_time_seconds": 40.86696267127991,
+    "success": true
+  },
+  {
+    "dataset": "dataset_1.txt",
+    "method": "hadoop",
+    "iteration": 2,
+    "execution_time_seconds": 38.42138648033142,
+    "success": true
+  },
+  {
+    "dataset": "dataset_1.txt",
+    "method": "hadoop",
+    "iteration": 3,
+    "execution_time_seconds": 38.473302125930786,
+    "success": true
+  },
+  {
+    "dataset": "dataset_1.txt",
+    "method": "spark",
+    "iteration": 1,
+    "execution_time_seconds": 10.252177476882935,
+    "success": true
+  },
+  {
+    "dataset": "dataset_1.txt",
+    "method": "spark",
+    "iteration": 2,
+    "execution_time_seconds": 10.222060441970825,
+    "success": true
+  },
+  {
+    "dataset": "dataset_1.txt",
+    "method": "spark",
+    "iteration": 3,
+    "execution_time_seconds": 10.248512983322144,
+    "success": true
+  },
+  {
+    "dataset": "dataset_1.txt",
+    "method": "linux",
+    "iteration": 1,
+    "execution_time_seconds": 0.9223623275756836,
+    "success": true
+  },
+  {
+    "dataset": "dataset_1.txt",
+    "method": "linux",
+    "iteration": 2,
+    "execution_time_seconds": 0.8867840766906738,
+    "success": true
+  },
+  {
+    "dataset": "dataset_1.txt",
+    "method": "linux",
+    "iteration": 3,
+    "execution_time_seconds": 0.915259599685669,
+    "success": true
+  },
+  {
+    "dataset": "dataset_2.txt",
+    "method": "hadoop",
+    "iteration": 1,
+    "execution_time_seconds": 38.24937701225281,
+    "success": true
+  },
+  {
+    "dataset": "dataset_2.txt",
+    "method": "hadoop",
+    "iteration": 2,
+    "execution_time_seconds": 38.05844306945801,
+    "success": true
+  },
+  {
+    "dataset": "dataset_2.txt",
+    "method": "hadoop",
+    "iteration": 3,
+    "execution_time_seconds": 37.67454695701599,
+    "success": true
+  },
+  {
+    "dataset": "dataset_2.txt",
+    "method": "spark",
+    "iteration": 1,
+    "execution_time_seconds": 9.964076042175293,
+    "success": true
+  },
+  {
+    "dataset": "dataset_2.txt",
+    "method": "spark",
+    "iteration": 2,
+    "execution_time_seconds": 9.958396196365356,
+    "success": true
+  },
+  {
+    "dataset": "dataset_2.txt",
+    "method": "spark",
+    "iteration": 3,
+    "execution_time_seconds": 9.99790620803833,
+    "success": true
+  },
+  {
+    "dataset": "dataset_2.txt",
+    "method": "linux",
+    "iteration": 1,
+    "execution_time_seconds": 0.8865094184875488,
+    "success": true
+  },
+  {
+    "dataset": "dataset_2.txt",
+    "method": "linux",
+    "iteration": 2,
+    "execution_time_seconds": 0.8936254978179932,
+    "success": true
+  },
+  {
+    "dataset": "dataset_2.txt",
+    "method": "linux",
+    "iteration": 3,
+    "execution_time_seconds": 0.8418838977813721,
+    "success": true
+  },
+  {
+    "dataset": "dataset_3.txt",
+    "method": "hadoop",
+    "iteration": 1,
+    "execution_time_seconds": 36.7986364364624,
+    "success": true
+  },
+  {
+    "dataset": "dataset_3.txt",
+    "method": "hadoop",
+    "iteration": 2,
+    "execution_time_seconds": 37.73943829536438,
+    "success": true
+  },
+  {
+    "dataset": "dataset_3.txt",
+    "method": "hadoop",
+    "iteration": 3,
+    "execution_time_seconds": 36.691468477249146,
+    "success": true
+  },
+  {
+    "dataset": "dataset_3.txt",
+    "method": "spark",
+    "iteration": 1,
+    "execution_time_seconds": 10.169877767562866,
+    "success": true
+  },
+  {
+    "dataset": "dataset_3.txt",
+    "method": "spark",
+    "iteration": 2,
+    "execution_time_seconds": 10.158384323120117,
+    "success": true
+  },
+  {
+    "dataset": "dataset_3.txt",
+    "method": "spark",
+    "iteration": 3,
+    "execution_time_seconds": 10.07123613357544,
+    "success": true
+  },
+  {
+    "dataset": "dataset_3.txt",
+    "method": "linux",
+    "iteration": 1,
+    "execution_time_seconds": 0.8907108306884766,
+    "success": true
+  },
+  {
+    "dataset": "dataset_3.txt",
+    "method": "linux",
+    "iteration": 2,
+    "execution_time_seconds": 0.9018738269805908,
+    "success": true
+  },
+  {
+    "dataset": "dataset_3.txt",
+    "method": "linux",
+    "iteration": 3,
+    "execution_time_seconds": 0.9033102989196777,
+    "success": true
+  },
+  {
+    "dataset": "dataset_4.txt",
+    "method": "hadoop",
+    "iteration": 1,
+    "execution_time_seconds": 36.97532081604004,
+    "success": true
+  },
+  {
+    "dataset": "dataset_4.txt",
+    "method": "hadoop",
+    "iteration": 2,
+    "execution_time_seconds": 37.59779214859009,
+    "success": true
+  },
+  {
+    "dataset": "dataset_4.txt",
+    "method": "hadoop",
+    "iteration": 3,
+    "execution_time_seconds": 37.951889753341675,
+    "success": true
+  },
+  {
+    "dataset": "dataset_4.txt",
+    "method": "spark",
+    "iteration": 1,
+    "execution_time_seconds": 9.9353666305542,
+    "success": true
+  },
+  {
+    "dataset": "dataset_4.txt",
+    "method": "spark",
+    "iteration": 2,
+    "execution_time_seconds": 10.079138040542603,
+    "success": true
+  },
+  {
+    "dataset": "dataset_4.txt",
+    "method": "spark",
+    "iteration": 3,
+    "execution_time_seconds": 10.16028094291687,
+    "success": true
+  },
+  {
+    "dataset": "dataset_4.txt",
+    "method": "linux",
+    "iteration": 1,
+    "execution_time_seconds": 0.9265420436859131,
+    "success": true
+  },
+  {
+    "dataset": "dataset_4.txt",
+    "method": "linux",
+    "iteration": 2,
+    "execution_time_seconds": 0.9372317790985107,
+    "success": true
+  },
+  {
+    "dataset": "dataset_4.txt",
+    "method": "linux",
+    "iteration": 3,
+    "execution_time_seconds": 0.8875381946563721,
+    "success": true
+  },
+  {
+    "dataset": "dataset_5.txt",
+    "method": "hadoop",
+    "iteration": 1,
+    "execution_time_seconds": 37.586220502853394,
+    "success": true
+  },
+  {
+    "dataset": "dataset_5.txt",
+    "method": "hadoop",
+    "iteration": 2,
+    "execution_time_seconds": 36.97262930870056,
+    "success": true
+  },
+  {
+    "dataset": "dataset_5.txt",
+    "method": "hadoop",
+    "iteration": 3,
+    "execution_time_seconds": 36.070627212524414,
+    "success": true
+  },
+  {
+    "dataset": "dataset_5.txt",
+    "method": "spark",
+    "iteration": 1,
+    "execution_time_seconds": 10.151059627532959,
+    "success": true
+  },
+  {
+    "dataset": "dataset_5.txt",
+    "method": "spark",
+    "iteration": 2,
+    "execution_time_seconds": 10.156206130981445,
+    "success": true
+  },
+  {
+    "dataset": "dataset_5.txt",
+    "method": "spark",
+    "iteration": 3,
+    "execution_time_seconds": 10.0122709274292,
+    "success": true
+  },
+  {
+    "dataset": "dataset_5.txt",
+    "method": "linux",
+    "iteration": 1,
+    "execution_time_seconds": 0.8449013233184814,
+    "success": true
+  },
+  {
+    "dataset": "dataset_5.txt",
+    "method": "linux",
+    "iteration": 2,
+    "execution_time_seconds": 0.8826608657836914,
+    "success": true
+  },
+  {
+    "dataset": "dataset_5.txt",
+    "method": "linux",
+    "iteration": 3,
+    "execution_time_seconds": 0.8261425495147705,
+    "success": true
+  },
+  {
+    "dataset": "dataset_6.txt",
+    "method": "hadoop",
+    "iteration": 1,
+    "execution_time_seconds": 37.90501260757446,
+    "success": true
+  },
+  {
+    "dataset": "dataset_6.txt",
+    "method": "hadoop",
+    "iteration": 2,
+    "execution_time_seconds": 37.37653684616089,
+    "success": true
+  },
+  {
+    "dataset": "dataset_6.txt",
+    "method": "hadoop",
+    "iteration": 3,
+    "execution_time_seconds": 36.48071527481079,
+    "success": true
+  },
+  {
+    "dataset": "dataset_6.txt",
+    "method": "spark",
+    "iteration": 1,
+    "execution_time_seconds": 10.12671971321106,
+    "success": true
+  },
+  {
+    "dataset": "dataset_6.txt",
+    "method": "spark",
+    "iteration": 2,
+    "execution_time_seconds": 10.060412168502808,
+    "success": true
+  },
+  {
+    "dataset": "dataset_6.txt",
+    "method": "spark",
+    "iteration": 3,
+    "execution_time_seconds": 10.010989904403687,
+    "success": true
+  },
+  {
+    "dataset": "dataset_6.txt",
+    "method": "linux",
+    "iteration": 1,
+    "execution_time_seconds": 0.8936855792999268,
+    "success": true
+  },
+  {
+    "dataset": "dataset_6.txt",
+    "method": "linux",
+    "iteration": 2,
+    "execution_time_seconds": 0.8812026977539062,
+    "success": true
+  },
+  {
+    "dataset": "dataset_6.txt",
+    "method": "linux",
+    "iteration": 3,
+    "execution_time_seconds": 0.9184398651123047,
+    "success": true
+  },
+  {
+    "dataset": "dataset_7.txt",
+    "method": "hadoop",
+    "iteration": 1,
+    "execution_time_seconds": 37.07896852493286,
+    "success": true
+  },
+  {
+    "dataset": "dataset_7.txt",
+    "method": "hadoop",
+    "iteration": 2,
+    "execution_time_seconds": 38.19162082672119,
+    "success": true
+  },
+  {
+    "dataset": "dataset_7.txt",
+    "method": "hadoop",
+    "iteration": 3,
+    "execution_time_seconds": 37.20409274101257,
+    "success": true
+  },
+  {
+    "dataset": "dataset_7.txt",
+    "method": "spark",
+    "iteration": 1,
+    "execution_time_seconds": 9.977168560028076,
+    "success": true
+  },
+  {
+    "dataset": "dataset_7.txt",
+    "method": "spark",
+    "iteration": 2,
+    "execution_time_seconds": 9.960350513458252,
+    "success": true
+  },
+  {
+    "dataset": "dataset_7.txt",
+    "method": "spark",
+    "iteration": 3,
+    "execution_time_seconds": 9.825506687164307,
+    "success": true
+  },
+  {
+    "dataset": "dataset_7.txt",
+    "method": "linux",
+    "iteration": 1,
+    "execution_time_seconds": 0.8631191253662109,
+    "success": true
+  },
+  {
+    "dataset": "dataset_7.txt",
+    "method": "linux",
+    "iteration": 2,
+    "execution_time_seconds": 0.8682234287261963,
+    "success": true
+  },
+  {
+    "dataset": "dataset_7.txt",
+    "method": "linux",
+    "iteration": 3,
+    "execution_time_seconds": 0.8388674259185791,
+    "success": true
+  },
+  {
+    "dataset": "dataset_8.txt",
+    "method": "hadoop",
+    "iteration": 1,
+    "execution_time_seconds": 36.61260199546814,
+    "success": true
+  },
+  {
+    "dataset": "dataset_8.txt",
+    "method": "hadoop",
+    "iteration": 2,
+    "execution_time_seconds": 37.61564874649048,
+    "success": true
+  },
+  {
+    "dataset": "dataset_8.txt",
+    "method": "hadoop",
+    "iteration": 3,
+    "execution_time_seconds": 37.52444529533386,
+    "success": true
+  },
+  {
+    "dataset": "dataset_8.txt",
+    "method": "spark",
+    "iteration": 1,
+    "execution_time_seconds": 9.810922622680664,
+    "success": true
+  },
+  {
+    "dataset": "dataset_8.txt",
+    "method": "spark",
+    "iteration": 2,
+    "execution_time_seconds": 10.022116661071777,
+    "success": true
+  },
+  {
+    "dataset": "dataset_8.txt",
+    "method": "spark",
+    "iteration": 3,
+    "execution_time_seconds": 9.896489381790161,
+    "success": true
+  },
+  {
+    "dataset": "dataset_8.txt",
+    "method": "linux",
+    "iteration": 1,
+    "execution_time_seconds": 0.8841285705566406,
+    "success": true
+  },
+  {
+    "dataset": "dataset_8.txt",
+    "method": "linux",
+    "iteration": 2,
+    "execution_time_seconds": 0.8690481185913086,
+    "success": true
+  },
+  {
+    "dataset": "dataset_8.txt",
+    "method": "linux",
+    "iteration": 3,
+    "execution_time_seconds": 0.8875620365142822,
+    "success": true
+  },
+  {
+    "dataset": "dataset_9.txt",
+    "method": "hadoop",
+    "iteration": 1,
+    "execution_time_seconds": 36.908801555633545,
+    "success": true
+  },
+  {
+    "dataset": "dataset_9.txt",
+    "method": "hadoop",
+    "iteration": 2,
+    "execution_time_seconds": 36.11899495124817,
+    "success": true
+  },
+  {
+    "dataset": "dataset_9.txt",
+    "method": "hadoop",
+    "iteration": 3,
+    "execution_time_seconds": 38.81863784790039,
+    "success": true
+  },
+  {
+    "dataset": "dataset_9.txt",
+    "method": "spark",
+    "iteration": 1,
+    "execution_time_seconds": 9.919250249862671,
+    "success": true
+  },
+  {
+    "dataset": "dataset_9.txt",
+    "method": "spark",
+    "iteration": 2,
+    "execution_time_seconds": 10.061579942703247,
+    "success": true
+  },
+  {
+    "dataset": "dataset_9.txt",
+    "method": "spark",
+    "iteration": 3,
+    "execution_time_seconds": 10.036011219024658,
+    "success": true
+  },
+  {
+    "dataset": "dataset_9.txt",
+    "method": "linux",
+    "iteration": 1,
+    "execution_time_seconds": 0.854489803314209,
+    "success": true
+  },
+  {
+    "dataset": "dataset_9.txt",
+    "method": "linux",
+    "iteration": 2,
+    "execution_time_seconds": 0.880704402923584,
+    "success": true
+  },
+  {
+    "dataset": "dataset_9.txt",
+    "method": "linux",
+    "iteration": 3,
+    "execution_time_seconds": 0.9038617610931396,
+    "success": true
+  }
+]

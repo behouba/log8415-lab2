@@ -1,0 +1,14 @@
+.env
+*.pyc
+__pycache__/
+.venv/
+artifacts/
+*.pem
+*.log
+.DS_Store
+
+# Data directories
+data/datasets/
+data/chunks/
+data/mapper_outputs/
+data/reducer_outputs/

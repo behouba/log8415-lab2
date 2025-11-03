@@ -1,0 +1,392 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+
+% Code listing style
+\lstset{
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    frame=single,
+    numbers=left,
+    numberstyle=\tiny,
+    keywordstyle=\color{blue},
+    commentstyle=\color{gray},
+    stringstyle=\color{red},
+}
+
+\title{\textbf{Lab Assignment 2: MapReduce on AWS} \\
+\large Advanced Concepts of Cloud Computing}
+\author{Kouame Behouba Manasse \\ Mehdi-Ilyes Haddoune \\ khbed (97263154) \\ Moses Ayite}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This report presents performance benchmarking of Hadoop, Apache Spark, and Linux bash for WordCount operations, and a distributed friend recommendation system using MapReduce. We tested the three methods on nine datasets with three iterations each. Results show that Spark is approximately 3.7x faster than Hadoop due to in-memory processing, while Linux bash is fastest for these small datasets. The friend recommendation algorithm was implemented using 3 mapper and 6 reducer instances on separate EC2 instances.
+\end{abstract}
+
+\section{Introduction}
+
+MapReduce is a programming model for processing large datasets in distributed computing environments. This assignment has two main parts: (1) benchmarking Hadoop, Spark, and Linux for WordCount operations, and (2) implementing a friend recommendation algorithm using MapReduce.
+
+We deployed the infrastructure on Amazon EC2 instances and automated the setup. All experiments were conducted on AWS us-east-1 region using Ubuntu 22.04 LTS instances.
+
+\section{Part 1: WordCount Performance Analysis}
+
+\subsection{Experimental Setup}
+
+We provisioned a single T2.large EC2 instance (2 vCPUs, 8 GB RAM) and configured it with:
+\begin{itemize}
+    \item Apache Hadoop 3.3.x with HDFS
+    \item Apache Spark 3.x with PySpark
+    \item Linux bash utilities (cat, tr, sort, uniq)
+\end{itemize}
+
+Nine text datasets of varying sizes were tested, with each method executing three iterations per dataset to ensure statistical reliability.
+
+\subsection{Implementation Details}
+
+\textbf{Hadoop Implementation:} We utilized Hadoop's native MapReduce framework with HDFS for distributed storage. The wordcount job was submitted using the hadoop-mapreduce-examples JAR file.
+
+\textbf{Spark Implementation:} A PySpark implementation leveraged Spark's in-memory processing capabilities. The implementation used RDD transformations (flatMap, map, reduceByKey) for efficient word counting.
+
+\textbf{Linux Implementation:} The bash pipeline used: \texttt{cat | tr ' ' '\textbackslash n' | sort | uniq -c}, providing a baseline for comparison without distributed computing overhead.
+
+\subsection{Results and Analysis}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{artifacts/plot_method_comparison.png}
+    \caption{Average execution time comparison across all datasets. Error bars represent standard deviation across 27 runs (9 datasets × 3 iterations).}
+    \label{fig:method_comparison}
+\end{figure}
+
+Table \ref{tab:performance_summary} summarizes the performance metrics:
+
+\begin{table}[H]
+\centering
+\caption{Performance Summary Statistics (seconds)}
+\label{tab:performance_summary}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+\textbf{Method} & \textbf{Mean} & \textbf{Median} & \textbf{Std Dev} & \textbf{Range} \\
+\midrule
+Hadoop & 37.55 & 37.59 & 0.96 & 36.07 -- 40.87 \\
+Spark & 10.05 & 10.04 & 0.12 & 9.81 -- 10.25 \\
+Linux & 0.88 & 0.89 & 0.03 & 0.83 -- 0.94 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Key Findings:}
+
+\textbf{Linux vs. Hadoop:} Linux bash is 42.5× faster than Hadoop. The difference is mainly due to Hadoop's overhead for job initialization, HDFS I/O, and inter-process communication, which dominates the execution time for these small datasets.
+
+\textbf{Spark vs. Hadoop:} Spark is 3.74× faster than Hadoop because of in-memory processing. Hadoop's disk-based MapReduce has significant I/O overhead for each map and reduce phase.
+
+\textbf{Linux vs. Spark:} Linux is 11.4× faster than Spark. For larger datasets, Spark would likely perform better when parallelism benefits outweigh the framework overhead.
+
+\textbf{Consistency:} Hadoop shows the highest variability (σ = 0.96s), while Spark has low variability (σ = 0.12s) across runs.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{artifacts/plot_dataset_comparison.png}
+    \caption{Performance by dataset. Hadoop takes consistent ~37s regardless of dataset, while Linux and Spark times vary slightly.}
+    \label{fig:dataset_comparison}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{artifacts/plot_distribution.png}
+    \caption{Execution time distribution (log scale). All methods show tight clustering, with Hadoop having the widest distribution.}
+    \label{fig:distribution}
+\end{figure}
+
+\subsection{Performance Discussion}
+
+The framework choice depends on dataset size:
+
+\begin{itemize}
+    \item \textbf{Small datasets (<100 MB):} Linux utilities are fastest due to minimal overhead.
+    \item \textbf{Medium datasets (100 MB - 1 GB):} Spark provides better performance and scalability.
+    \item \textbf{Large datasets (>1 GB):} Both Spark and Hadoop work well, with Spark better for iterative algorithms.
+\end{itemize}
+
+Hadoop's consistent ~37s execution time across datasets suggests that job initialization overhead (JVM startup, HDFS setup, task scheduling) dominates the actual computation time for these test datasets.
+
+\section{Part 2: Friend Recommendation System}
+
+\subsection{Problem Statement}
+
+Implement a "People You Might Know" recommendation system that suggests users with the most mutual friends. For each user U, recommend up to N=10 users who are:
+\begin{enumerate}
+    \item Not already friends with U
+    \item Share the maximum number of mutual friends with U
+\end{enumerate}
+
+\subsection{MapReduce Algorithm Design}
+
+\subsubsection{Mapper Phase}
+
+The mapper processes each line of the input adjacency list and emits two types of key-value pairs:
+
+\textbf{Input format:} \texttt{<UserID><TAB><Friend1,Friend2,...,FriendN>}
+
+\textbf{Mapper logic:}
+\begin{enumerate}
+    \item \textbf{Mark existing friendships:} For each friend F of user U, emit:
+    \begin{lstlisting}[language=Python]
+pair = sorted([U, F])
+emit(f"{pair[0]},{pair[1]}", "-1")
+    \end{lstlisting}
+    The "-1" marker indicates an existing friendship that should be excluded from recommendations.
+
+    \item \textbf{Identify potential mutual friends:} For each pair of friends (F1, F2) of user U, emit:
+    \begin{lstlisting}[language=Python]
+pair = sorted([F1, F2])
+emit(f"{pair[0]},{pair[1]}", U)
+    \end{lstlisting}
+    This indicates U is a mutual friend connecting F1 and F2.
+\end{enumerate}
+
+\textbf{Example:} If user A has friends [B, C, D]:
+\begin{verbatim}
+(A,B) -> -1    # Existing friendship
+(A,C) -> -1    # Existing friendship
+(A,D) -> -1    # Existing friendship
+(B,C) -> A     # B and C are potential friends via A
+(B,D) -> A     # B and D are potential friends via A
+(C,D) -> A     # C and D are potential friends via A
+\end{verbatim}
+
+\subsubsection{Shuffle and Partition Phase}
+
+Mapper outputs are partitioned across reducer instances using MD5 hashing:
+
+\begin{lstlisting}[language=Python]
+def shard_for_pair(pair_key, num_reducers):
+    digest = hashlib.md5(pair_key.encode("utf-8")).hexdigest()
+    return int(digest[:8], 16) % num_reducers
+\end{lstlisting}
+
+All mutual friend counts for a given user pair are processed by the same reducer.
+
+\subsubsection{Reducer Phase}
+
+The reducer aggregates mutual friend counts:
+
+\begin{enumerate}
+    \item Group all values by key (user pair)
+    \item If "-1" exists in values, skip this pair (already friends)
+    \item Otherwise, count the number of mutual friends (value count)
+    \item For each user, sort candidates by mutual friend count (descending)
+    \item Output top 10 recommendations per user
+\end{enumerate}
+
+\textbf{Reducer output format:} \texttt{<UserID><TAB><Rec1:Count1,Rec2:Count2,...>}
+
+\subsection{Distributed Implementation}
+
+\textbf{Infrastructure:}
+\begin{itemize}
+    \item 3 Mapper instances (t2.micro)
+    \item 6 Reducer instances (t2.micro)
+    \item All instances deployed in separate EC2 instances as required
+\end{itemize}
+
+\textbf{Execution workflow:}
+\begin{enumerate}
+    \item Split input data (4.8M users) into 3 chunks
+    \item Upload chunks to mapper instances via SCP
+    \item Execute mappers in parallel, generating key-value pairs
+    \item Download mapper outputs
+    \item Partition mapper outputs by hash function across 6 reducers
+    \item Upload partitions to reducer instances
+    \item Execute reducers in parallel
+    \item Download and merge reducer outputs
+    \item Generate final recommendations
+\end{enumerate}
+
+\subsection{Friend Recommendation Results}
+
+Table \ref{tab:recommendations} shows recommendations for the required users:
+
+\begin{table}[H]
+\centering
+\caption{Friend Recommendations for Report Users}
+\label{tab:recommendations}
+\begin{tabular}{@{}cl@{}}
+\toprule
+\textbf{User ID} & \textbf{Recommended Friends} \\
+\midrule
+924 & 439, 2409, 6995, 11860, 15416, 43748, 45881 \\
+8941 & 8943, 8944, 8940 \\
+8942 & 8939, 8940, 8943, 8944 \\
+9019 & 9022, 317, 9023 \\
+9020 & 9021, 9016, 9017, 9022, 317, 9023 \\
+9021 & 9020, 9016, 9017, 9022, 317, 9023 \\
+9022 & 9019, 9020, 9021, 317, 9016, 9017, 9023 \\
+9990 & 13134, 13478, 13877, 34299, 34485, 34642, 37941 \\
+9992 & 9987, 9989, 35667, 9991 \\
+9993 & 9991, 13134, 13478, 13877, 34299, 34485, 34642, 37941 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Observations:}
+
+Users in the 9000-9100 range show overlap in recommendations (e.g., users 9019-9022 share common recommendations). User 9990 and 9993 share 7 common recommendations. Some users have fewer than 10 recommendations due to limited second-degree connections.
+
+\section{Infrastructure as Code and Automation}
+
+All infrastructure provisioning and experiment execution is fully automated:
+
+\subsection{Automation Scripts}
+
+\textbf{Part 1 Execution:}
+\begin{verbatim}
+./scripts/bootstrap_env.sh        # Setup AWS credentials
+set -a; source .env; set +a       # Load environment
+./run_part1.sh                     # Execute full pipeline
+\end{verbatim}
+
+\textbf{Part 2 Execution:}
+\begin{verbatim}
+./run_part2.sh                     # Execute MapReduce pipeline
+\end{verbatim}
+
+\textbf{Cleanup:}
+\begin{verbatim}
+./stop.sh                          # Terminate all instances
+\end{verbatim}
+
+\subsection{Automation Details}
+
+EC2 instances are created programmatically using boto3. Mappers and reducers run in parallel. SSH connections have retry logic for transient network failures. Instances are automatically terminated after completion to minimize costs. All results, plots, and metadata are saved automatically.
+
+\section{Lessons Learned}
+
+For small datasets under 1 GB, MapReduce frameworks add significant overhead without much benefit. Spark's 3.7× speedup over Hadoop shows the value of in-memory processing. Hash-based partitioning helps distribute load evenly across reducers.
+
+SSH/SCP operations added overhead for data transfer between instances. Transient network failures required retry mechanisms. Some reducers processed more data than others due to uneven user distribution.
+
+The friend recommendation algorithm uses a pattern where keys represent user pairs, and values represent either existing friendships (-1) or mutual friends. Reducers must handle multiple value types for the same key.
+
+\section{Conclusions}
+
+This assignment provided experience with MapReduce on AWS cloud infrastructure. Simple operations work better with lightweight tools like bash, while Spark and Hadoop are useful for larger datasets. Spark is 3.7× faster than Hadoop due to in-memory processing, though both have initialization overhead.
+
+The friend recommendation algorithm fits well into the MapReduce paradigm with map phase emitting potential connections and reduce phase aggregating mutual friends. Automated provisioning helps ensure reproducibility.
+
+\section{Instructions to Run the Code}
+
+\subsection{Prerequisites}
+\begin{itemize}
+    \item AWS account with appropriate permissions (EC2, VPC)
+    \item AWS credentials configured
+    \item Python 3.8+
+    \item SSH key pair for EC2 access
+    \item soc-LiveJournal1Adj.txt dataset (place in \texttt{data/} directory)
+\end{itemize}
+
+\subsection{Setup}
+\begin{lstlisting}[language=bash]
+# Clone repository and navigate to lab2 directory
+cd lab2/
+
+# Configure AWS credentials
+./scripts/bootstrap_env.sh
+
+# Load environment variables
+set -a; source .env; set +a
+\end{lstlisting}
+
+\subsection{Part 1: WordCount Benchmarking}
+\begin{lstlisting}[language=bash]
+# Run complete Part 1 pipeline (~40-50 minutes)
+./run_part1.sh
+
+# View results
+cat artifacts/summary_statistics.json
+open artifacts/plot_method_comparison.png
+\end{lstlisting}
+
+\subsection{Part 2: Friend Recommendation}
+\begin{lstlisting}[language=bash]
+# Ensure dataset is available
+ls data/soc-LiveJournal1Adj.txt
+
+# Run complete Part 2 pipeline (~15-20 minutes)
+./run_part2.sh
+
+# View recommendations
+cat artifacts/report_recommendations.txt
+\end{lstlisting}
+
+\subsection{Cleanup}
+\begin{lstlisting}[language=bash]
+# Terminate all EC2 instances
+./stop.sh
+\end{lstlisting}
+
+\subsection{Manual Execution (if automation fails)}
+\begin{lstlisting}[language=bash]
+# Part 1
+python scripts/provision_wordcount.py
+sleep 30
+python scripts/setup_hadoop_spark.py
+python scripts/run_wordcount_benchmarks.py
+python plots/generate_plots.py
+
+# Part 2
+python scripts/provision_mapreduce.py
+sleep 30
+python scripts/deploy_mapreduce.py
+python scripts/run_friend_recommendation.py
+\end{lstlisting}
+
+\section*{Appendix: Code Structure}
+
+\begin{verbatim}
+lab2/
+├── app/
+│   ├── mapper.py           # Friend recommendation mapper
+│   └── reducer.py          # Friend recommendation reducer
+├── wordcount/
+│   ├── hadoop_wordcount.sh
+│   ├── spark_wordcount.py
+│   └── linux_wordcount.sh
+├── scripts/
+│   ├── bootstrap_env.sh
+│   ├── provision_wordcount.py
+│   ├── provision_mapreduce.py
+│   ├── setup_hadoop_spark.py
+│   ├── deploy_mapreduce.py
+│   ├── run_wordcount_benchmarks.py
+│   ├── run_friend_recommendation.py
+│   └── teardown.py
+├── plots/
+│   └── generate_plots.py
+├── artifacts/              # Results directory
+│   ├── benchmark_results.json
+│   ├── summary_statistics.json
+│   ├── friend_recommendations.txt
+│   ├── report_recommendations.txt
+│   └── plot_*.png
+├── run_part1.sh           # Part 1 automation
+├── run_part2.sh           # Part 2 automation
+├── stop.sh                # Cleanup script
+└── README.md
+\end{verbatim}
+
+\end{document}

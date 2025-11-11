@@ -121,13 +121,26 @@ for dataset_name, _ in dataset_files:
 
             cmd = cmd_template.format(dataset=dataset_name)
 
-            # Measure execution time
-            start_time = time.time()
+            # Execute command and capture output
             result = ssh(cmd)
-            end_time = time.time()
-
-            elapsed_time = end_time - start_time
             success = result.returncode == 0
+
+            # Parse execution time from script output
+            elapsed_time = None
+            if success and result.stdout:
+                for line in result.stdout.strip().split('\n'):
+                    if line.startswith("EXECUTION_TIME:"):
+                        try:
+                            elapsed_time = float(line.split("EXECUTION_TIME:")[1].strip())
+                            break
+                        except (ValueError, IndexError):
+                            pass
+
+            # Fallback if parsing failed (shouldn't happen with updated scripts)
+            if elapsed_time is None:
+                print(f"  WARNING: Could not parse execution time from output")
+                elapsed_time = 0.0
+                success = False
 
             result_entry = {
                 "dataset": dataset_name,

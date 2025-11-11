@@ -1,5 +1,5 @@
 #!/bin/bash
-# Hadoop WordCount wrapper script
+# Hadoop WordCount wrapper script with timing
 # Usage: ./hadoop_wordcount.sh <input_file> <output_dir>
 
 set -euo pipefail
@@ -29,6 +29,9 @@ INPUT_HDFS="/input/$(basename $INPUT_FILE)"
 $HADOOP_HOME/bin/hdfs dfs -rm -f "$INPUT_HDFS" || true
 $HADOOP_HOME/bin/hdfs dfs -put "$INPUT_FILE" "$INPUT_HDFS"
 
+# Start timing - only measure the actual MapReduce job
+START_TIME=$(date +%s.%N)
+
 # Run Hadoop WordCount
 $HADOOP_HOME/bin/hadoop jar \
     $HADOOP_HOME/share/hadoop/mapreduce/hadoop-mapreduce-examples-*.jar \
@@ -36,7 +39,13 @@ $HADOOP_HOME/bin/hadoop jar \
     "$INPUT_HDFS" \
     "$OUTPUT_DIR"
 
+# End timing
+END_TIME=$(date +%s.%N)
+
 # Get the output file
 $HADOOP_HOME/bin/hdfs dfs -cat "$OUTPUT_DIR/part-r-00000" > /tmp/hadoop_wordcount_output.txt || true
 
+# Calculate and output execution time
+EXECUTION_TIME=$(echo "$END_TIME - $START_TIME" | bc)
+echo "EXECUTION_TIME: $EXECUTION_TIME"
 echo "WordCount complete. Output in $OUTPUT_DIR"

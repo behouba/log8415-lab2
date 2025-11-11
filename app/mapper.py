@@ -28,10 +28,14 @@ def map_friends(input_file, output_file):
             else:
                 friends = [f.strip() for f in friends_str.split(',') if f.strip()]
 
+            # Mark existing friendships with -1 (to filter them out in reduce)
             for friend in friends:
                 pair = tuple(sorted([user, friend]))
                 emit(f"{pair[0]},{pair[1]}", "-1")
 
+            # Emit potential recommendations:
+            # For each pair of this user's friends, they should be recommended to each other
+            # because 'user' is their mutual friend
             for i in range(len(friends)):
                 for j in range(i + 1, len(friends)):
                     friend_a = friends[i]
